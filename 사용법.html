@@ -1,0 +1,405 @@
+<title>네이버부동산 매물정리 사용법</title>
+<style>
+  :root {
+    --green: #03c75a;
+    --green-deep: #02a94c;
+    --green-soft: #e6f7ee;
+    --ink: #16211c;
+    --muted: #5f7268;
+    --line: #dfe7e1;
+    --paper: #f4f8f5;
+    --card: #ffffff;
+    --shadow: 0 6px 22px rgba(16, 40, 28, 0.08);
+    /* 거래유형 파스텔 (앱과 동일) */
+    --t-deal: #eaf3ff;   --t-deal-ink: #1f5fae;
+    --t-jeonse: #eafaf0; --t-jeonse-ink: #1c884a;
+    --t-rent: #fff3e6;   --t-rent-ink: #b5701a;
+    --t-short: #f5ecfb;  --t-short-ink: #7a44b0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #e7efe9; --muted: #93a79b; --line: #26312b;
+      --paper: #10150f; --card: #171e19; --green-soft: #12281c;
+      --shadow: 0 6px 22px rgba(0, 0, 0, 0.4);
+      --t-deal: #16233a;   --t-deal-ink: #93c0f5;
+      --t-jeonse: #14291d; --t-jeonse-ink: #7fd6a2;
+      --t-rent: #33260f;   --t-rent-ink: #f0b872;
+      --t-short: #271933;  --t-short-ink: #c9a3ea;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #e7efe9; --muted: #93a79b; --line: #26312b;
+    --paper: #10150f; --card: #171e19; --green-soft: #12281c;
+    --shadow: 0 6px 22px rgba(0, 0, 0, 0.4);
+    --t-deal: #16233a; --t-deal-ink: #93c0f5;
+    --t-jeonse: #14291d; --t-jeonse-ink: #7fd6a2;
+    --t-rent: #33260f; --t-rent-ink: #f0b872;
+    --t-short: #271933; --t-short-ink: #c9a3ea;
+  }
+  :root[data-theme="light"] {
+    --ink: #16211c; --muted: #5f7268; --line: #dfe7e1;
+    --paper: #f4f8f5; --card: #ffffff; --green-soft: #e6f7ee;
+    --shadow: 0 6px 22px rgba(16, 40, 28, 0.08);
+    --t-deal: #eaf3ff; --t-deal-ink: #1f5fae;
+    --t-jeonse: #eafaf0; --t-jeonse-ink: #1c884a;
+    --t-rent: #fff3e6; --t-rent-ink: #b5701a;
+    --t-short: #f5ecfb; --t-short-ink: #7a44b0;
+  }
+
+  * { box-sizing: border-box; }
+  .wrap {
+    font-family: "Pretendard Variable", Pretendard, "Malgun Gothic", "맑은 고딕", -apple-system, system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    padding: 0 16px 64px;
+  }
+  .container { max-width: 860px; margin: 0 auto; }
+  .wrap h1, .wrap h2, .wrap h3 { text-wrap: balance; margin: 0; }
+  .wrap p { margin: 0; }
+
+  /* ===== Hero ===== */
+  .hero {
+    text-align: center;
+    padding: 56px 20px 40px;
+  }
+  .brandpill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--green); color: #fff;
+    font-weight: 700; font-size: 14px;
+    padding: 9px 16px; border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(3, 199, 90, 0.35);
+  }
+  .brandpill .dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; }
+  .hero h1 {
+    font-size: clamp(30px, 6vw, 46px); font-weight: 800; letter-spacing: -0.02em;
+    margin: 22px 0 10px; line-height: 1.15;
+  }
+  .hero h1 .hl { color: var(--green); }
+  .hero .sub { color: var(--muted); font-size: clamp(15px, 2.4vw, 18px); max-width: 40ch; margin: 0 auto; }
+  .hero .meta { margin-top: 18px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* ===== Section ===== */
+  section { margin-top: 30px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 800; letter-spacing: 0.12em;
+    color: var(--green-deep); text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .eyebrow .num {
+    display: inline-grid; place-items: center;
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--green); color: #fff; font-size: 12px;
+  }
+  h2.title { font-size: clamp(20px, 3.4vw, 26px); font-weight: 800; letter-spacing: -0.01em; }
+  .lead { color: var(--muted); margin-top: 6px; font-size: 15px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; box-shadow: var(--shadow);
+    padding: 22px;
+  }
+
+  /* ===== Steps ===== */
+  .steps { display: grid; gap: 14px; }
+  @media (min-width: 620px) { .steps { grid-template-columns: repeat(3, 1fr); } }
+  .step { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; position: relative; overflow: hidden; }
+  .step::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--green); }
+  .step .n { font-size: 13px; font-weight: 800; color: var(--green-deep); }
+  .step h3 { font-size: 16px; font-weight: 700; margin: 6px 0 6px; }
+  .step p { font-size: 13.5px; color: var(--muted); }
+  .kbd {
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    background: var(--green-soft); color: var(--green-deep);
+    border-radius: 6px; padding: 1px 6px; font-size: 12.5px; font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ===== Auto features ===== */
+  .autos { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 560px) { .autos { grid-template-columns: 1fr 1fr; } }
+  .auto {
+    display: flex; gap: 13px; align-items: flex-start;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 13px; padding: 15px 16px;
+  }
+  .auto .ic {
+    flex: none; width: 38px; height: 38px; border-radius: 10px;
+    display: grid; place-items: center; font-size: 19px;
+    background: var(--green-soft);
+  }
+  .auto b { display: block; font-size: 15px; margin-bottom: 2px; }
+  .auto span { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .autos-note {
+    margin-top: 14px; text-align: center; font-size: 13.5px; font-weight: 600;
+    color: var(--green-deep); background: var(--green-soft);
+    border-radius: 10px; padding: 11px;
+  }
+
+  /* ===== Mock UI ===== */
+  .mock {
+    border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    box-shadow: var(--shadow); background: var(--card);
+  }
+  .mock-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: color-mix(in srgb, var(--paper) 70%, var(--card));
+    border-bottom: 1px solid var(--line); padding: 10px 14px; flex-wrap: wrap;
+  }
+  .mock-title { font-weight: 700; font-size: 14px; }
+  .mock-title b { color: var(--green); }
+  .mtools { display: flex; gap: 6px; flex-wrap: wrap; }
+  .mchk, .mbtn {
+    font-size: 11.5px; font-weight: 600; border: 1px solid var(--line);
+    border-radius: 7px; padding: 5px 9px; background: var(--card); color: var(--ink);
+    white-space: nowrap;
+  }
+  .mbtn.g { background: var(--green); border-color: var(--green); color: #fff; }
+  .mbtn.on { background: var(--green); border-color: var(--green); color: #fff; }
+  .msort { display: inline-flex; gap: 4px; align-items: center; border: 1px solid var(--line); border-radius: 7px; padding: 3px 6px; font-size: 11px; font-weight: 700; color: var(--muted); }
+  .msort .sb { font-size: 11.5px; font-weight: 600; border: 1px solid var(--line); border-radius: 5px; padding: 3px 7px; background: var(--card); color: var(--ink); }
+  .msep { width: 1px; align-self: stretch; background: var(--line); margin: 1px 3px; }
+
+  .tbl-scroll { overflow-x: auto; }
+  table.mtbl { border-collapse: collapse; width: 100%; font-size: 12px; min-width: 640px; }
+  table.mtbl th {
+    background: color-mix(in srgb, var(--paper) 60%, var(--card));
+    text-align: left; padding: 8px 9px; font-weight: 700; white-space: nowrap;
+    border-bottom: 2px solid var(--line); color: var(--ink);
+  }
+  table.mtbl td { padding: 7px 9px; border-bottom: 1px solid var(--line); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  tr.r-deal { background: var(--t-deal); }
+  tr.r-jeonse { background: var(--t-jeonse); }
+  tr.r-rent { background: var(--t-rent); }
+  tr.r-short { background: var(--t-short); }
+  .maplink { color: #c0392b; font-weight: 600; }
+  .viewlink { color: var(--green-deep); font-weight: 600; }
+
+  /* ===== Column callouts ===== */
+  .cols { display: grid; gap: 10px; grid-template-columns: 1fr; margin-top: 16px; }
+  @media (min-width: 560px) { .cols { grid-template-columns: 1fr 1fr; } }
+  .col { display: flex; gap: 10px; align-items: baseline; font-size: 13.5px; }
+  .col .name { font-weight: 700; color: var(--ink); min-width: 92px; flex: none; }
+  .col .desc { color: var(--muted); }
+
+  /* ===== Legend ===== */
+  .legend { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
+  @media (min-width: 560px) { .legend { grid-template-columns: repeat(4, 1fr); } }
+  .lg { border-radius: 12px; padding: 14px; text-align: center; border: 1px solid var(--line); }
+  .lg.deal { background: var(--t-deal); } .lg.deal b { color: var(--t-deal-ink); }
+  .lg.jeonse { background: var(--t-jeonse); } .lg.jeonse b { color: var(--t-jeonse-ink); }
+  .lg.rent { background: var(--t-rent); } .lg.rent b { color: var(--t-rent-ink); }
+  .lg.short { background: var(--t-short); } .lg.short b { color: var(--t-short-ink); }
+  .lg b { font-size: 15px; }
+  .lg span { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* ===== Sort explainer ===== */
+  .setrow { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 620px) { .setrow { grid-template-columns: repeat(3, 1fr); } }
+  .set { border: 1px solid var(--line); border-radius: 13px; padding: 15px; background: var(--card); }
+  .set .lab { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; color: var(--green-deep); text-transform: uppercase; }
+  .set .btns { display: flex; gap: 6px; margin: 10px 0 8px; flex-wrap: wrap; }
+  .set .b { font-size: 12.5px; font-weight: 600; border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; background: var(--card); }
+  .set p { font-size: 12.5px; color: var(--muted); }
+
+  .callout {
+    display: flex; gap: 12px; align-items: flex-start;
+    border: 1px solid var(--line); border-left: 4px solid var(--green);
+    background: var(--card); border-radius: 12px; padding: 16px 18px; margin-top: 14px;
+  }
+  .callout.warn { border-left-color: #e0902a; }
+  .callout .ci { font-size: 20px; flex: none; }
+  .callout b { font-size: 14.5px; }
+  .callout p { font-size: 13.5px; color: var(--muted); margin-top: 3px; }
+  .callout code { font-family: ui-monospace, Consolas, monospace; background: var(--green-soft); color: var(--green-deep); padding: 1px 5px; border-radius: 5px; font-size: 12.5px; }
+
+  .foot { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); }
+
+  ol.mini { margin: 10px 0 0; padding-left: 20px; }
+  ol.mini li { font-size: 13.5px; color: var(--muted); margin-bottom: 4px; }
+  ol.mini li b { color: var(--ink); }
+</style>
+
+<div class="wrap">
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="brandpill"><span class="dot"></span>네이버부동산 매물정리</span>
+    <h1>매물을 <span class="hl">표 한 장</span>으로<br>자동 정리하는 크롬 확장앱</h1>
+    <p class="sub">네이버페이 부동산에서 매물을 보기만 하면, 주소·가격·평단가·지번·사용승인 년차가 표로 쌓입니다.</p>
+    <p class="meta">사용 사이트 · fin.land.naver.com &nbsp;|&nbsp; 크롬 전용</p>
+  </div>
+
+  <!-- 1. 설치 -->
+  <section>
+    <div class="eyebrow"><span class="num">1</span> 설치</div>
+    <h2 class="title">확장앱 올리기 (한 번만)</h2>
+    <div class="steps" style="margin-top:16px">
+      <div class="step">
+        <div class="n">STEP 1</div>
+        <h3>확장 관리 열기</h3>
+        <p>크롬 주소창에 <span class="kbd">chrome://extensions</span> 입력 후 이동</p>
+      </div>
+      <div class="step">
+        <div class="n">STEP 2</div>
+        <h3>개발자 모드 켜기</h3>
+        <p>오른쪽 위 <b>개발자 모드</b> 스위치를 켭니다</p>
+      </div>
+      <div class="step">
+        <div class="n">STEP 3</div>
+        <h3>폴더 불러오기</h3>
+        <p><b>압축해제된 확장 프로그램 로드</b> → <span class="kbd">네이버부동산매물정리</span> 폴더 선택</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 시작 -->
+  <section>
+    <div class="eyebrow"><span class="num">2</span> 시작</div>
+    <h2 class="title">패널 열기</h2>
+    <p class="lead">설치 후엔 그냥 부동산을 둘러보기만 하면 됩니다.</p>
+    <div class="card" style="margin-top:16px">
+      <ol class="mini">
+        <li><b>fin.land.naver.com</b> 에서 원하는 지역·종류의 매물 목록을 엽니다.</li>
+        <li>목록을 <b>스크롤</b>하면 오른쪽 아래 <span class="brandpill" style="padding:4px 11px;font-size:12px;box-shadow:none"><span class="dot"></span>매물정리 <b style="background:#fff;color:var(--green-deep);border-radius:8px;padding:0 6px;margin-left:4px">22</b></span> 버튼의 숫자가 올라갑니다.</li>
+        <li>그 버튼을 <b>클릭</b>하면 정리된 표 패널이 열립니다.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 3. 자동 -->
+  <section>
+    <div class="eyebrow"><span class="num">3</span> 자동</div>
+    <h2 class="title">버튼 없이 알아서 되는 것들</h2>
+    <p class="lead">따로 누를 필요 없이 백그라운드에서 처리됩니다.</p>
+    <div class="autos" style="margin-top:16px">
+      <div class="auto"><div class="ic">📥</div><div><b>매물 자동 수집</b><span>스크롤하는 대로 표에 쌓임</span></div></div>
+      <div class="auto"><div class="ic">📍</div><div><b>지번 자동 채우기</b><span>좌표를 카카오 지도로 변환해 동 → 지번까지</span></div></div>
+      <div class="auto"><div class="ic">🏗️</div><div><b>사용승인 년차</b><span>준공 후 경과 년차로 자동 표시</span></div></div>
+      <div class="auto"><div class="ic">🧹</div><div><b>동일매물 합치기</b><span>여러 중개사가 올린 같은 물건은 한 줄로</span></div></div>
+      <div class="auto"><div class="ic">🎯</div><div><b>현재 지역·종류만</b><span>다른 지역·엉뚱한 종류가 섞이면 자동 숨김</span></div></div>
+      <div class="auto"><div class="ic">📐</div><div><b>평단가 자동 계산</b><span>전용면적 기준 만원/평, 월세는 평당월세</span></div></div>
+    </div>
+    <p class="autos-note">✔ 지번은 <b>지번 자동</b> 체크박스가 켜져 있으면 계속 채워집니다 — 같은 좌표는 한 번만 조회해 아껴 씁니다.</p>
+  </section>
+
+  <!-- 4. 표 읽는 법 -->
+  <section>
+    <div class="eyebrow"><span class="num">4</span> 표</div>
+    <h2 class="title">표 읽는 법</h2>
+    <p class="lead">거래유형에 따라 행 색이 다릅니다. 아래는 실제 화면 예시입니다.</p>
+    <div class="mock" style="margin-top:16px">
+      <div class="mock-head">
+        <div class="mock-title">📋 매물정리 <b>22</b>건</div>
+        <div class="mtools">
+          <span class="mchk">☑ 지번 자동</span>
+          <span class="msort">정렬<span class="sb on" style="background:var(--green);border-color:var(--green);color:#fff">월세</span><span class="msep"></span><span class="sb">신축순</span></span>
+          <span class="mbtn">CSV</span><span class="mbtn">엑셀</span>
+        </div>
+      </div>
+      <div class="tbl-scroll">
+        <table class="mtbl">
+          <thead><tr>
+            <th>주소</th><th>거래</th><th>보증금</th><th>월세</th><th>평단가</th><th>평당월세</th><th>면적</th><th>사용승인</th><th>층</th><th>링크</th>
+          </tr></thead>
+          <tbody>
+            <tr class="r-rent"><td>시흥시 장곡동 823-3</td><td>월세</td><td>1,000</td><td>80</td><td>—</td><td>7.6</td><td>54㎡ (10.5평)</td><td>26년차</td><td>1/5</td><td><span class="maplink">📍지도</span> <span class="viewlink">보기</span></td></tr>
+            <tr class="r-deal"><td>시흥시 장곡동 828</td><td>매매</td><td>—</td><td>—</td><td>207</td><td>—</td><td>328㎡ (77.4평)</td><td>28년차</td><td>1/2</td><td><span class="maplink">📍지도</span> <span class="viewlink">보기</span></td></tr>
+            <tr class="r-jeonse"><td>시흥시 장곡동 823-5</td><td>전세</td><td>2억</td><td>—</td><td>1,510</td><td>—</td><td>85㎡ (18.1평)</td><td>27년차</td><td>4/5</td><td><span class="maplink">📍지도</span> <span class="viewlink">보기</span></td></tr>
+            <tr class="r-short"><td>시흥시 장곡동 833</td><td>단기</td><td>1,000</td><td>90</td><td>—</td><td>6.2</td><td>52㎡ (10.0평)</td><td>4년차</td><td>2/8</td><td><span class="maplink">📍지도</span> <span class="viewlink">보기</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="col"><span class="name">주소</span><span class="desc">동까지는 네이버, 그 뒤 <b>지번은 카카오</b>로 자동</span></div>
+      <div class="col"><span class="name">매매가/보증금/월세</span><span class="desc">거래유형에 맞는 칸에 표시 (예: 3억 5,000)</span></div>
+      <div class="col"><span class="name">평단가</span><span class="desc">매매·전세 · <b>전용면적</b> 기준 만원/평</span></div>
+      <div class="col"><span class="name">평당월세</span><span class="desc">월세 매물의 전용 평당 월세</span></div>
+      <div class="col"><span class="name">면적</span><span class="desc">공급/전용 ㎡ 와 전용 평수</span></div>
+      <div class="col"><span class="name">사용승인</span><span class="desc">준공 경과 <b>년차</b> (네이버 방식)</span></div>
+      <div class="col"><span class="name">📍지도</span><span class="desc">카카오 지도에서 그 위치 열기</span></div>
+      <div class="col"><span class="name">✕</span><span class="desc">그 매물(중복 포함) 표에서 삭제</span></div>
+    </div>
+  </section>
+
+  <!-- 5. 색상 -->
+  <section>
+    <div class="eyebrow"><span class="num">5</span> 색상</div>
+    <h2 class="title">거래유형 색 구분</h2>
+    <div class="legend" style="margin-top:16px">
+      <div class="lg deal"><b>매매</b><span>연파랑</span></div>
+      <div class="lg jeonse"><b>전세</b><span>연초록</span></div>
+      <div class="lg rent"><b>월세</b><span>연주황</span></div>
+      <div class="lg short"><b>단기임대</b><span>연보라</span></div>
+    </div>
+  </section>
+
+  <!-- 6. 정렬 -->
+  <section>
+    <div class="eyebrow"><span class="num">6</span> 정렬</div>
+    <h2 class="title">원하는 대로 정렬 (조합 가능)</h2>
+    <p class="lead">세 묶음을 각각 켤 수 있고, <b>가장 최근에 누른 기준이 우선</b>입니다. 같은 버튼을 다시 누르면 해제돼요.</p>
+    <div class="setrow" style="margin-top:16px">
+      <div class="set">
+        <div class="lab">거래유형</div>
+        <div class="btns"><span class="b">매매</span><span class="b">전세</span><span class="b">월세</span></div>
+        <p>선택한 거래유형을 맨 위로 모읍니다.</p>
+      </div>
+      <div class="set">
+        <div class="lab">층</div>
+        <div class="btns"><span class="b">1층순</span><span class="b">상층순</span></div>
+        <p>1층 상가만 훑거나, 높은 층부터 보기.</p>
+      </div>
+      <div class="set">
+        <div class="lab">사용승인 년차</div>
+        <div class="btns"><span class="b">신축순</span><span class="b">구축순</span></div>
+        <p>새 건물부터 / 오래된 건물부터.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <span class="ci">💡</span>
+      <div><b>조합 예시</b><p><b>매매 + 신축순</b> → 매매 매물이 먼저, 그 안에서 신축부터 정렬됩니다.</p></div>
+    </div>
+  </section>
+
+  <!-- 7. 내보내기 -->
+  <section>
+    <div class="eyebrow"><span class="num">7</span> 내보내기</div>
+    <h2 class="title">저장 · 초기화</h2>
+    <div class="autos" style="margin-top:16px">
+      <div class="auto"><div class="ic">📄</div><div><b>CSV</b><span>엑셀·구글시트에서 여는 파일</span></div></div>
+      <div class="auto"><div class="ic">📊</div><div><b>엑셀</b><span>서식이 있는 표 파일(.xls)</span></div></div>
+      <div class="auto"><div class="ic">📋</div><div><b>복사</b><span>바로 붙여넣기용 표(엑셀·시트에 Ctrl+V)</span></div></div>
+      <div class="auto"><div class="ic">🗑️</div><div><b>초기화</b><span>표 비우기 · 처음부터 다시 모으려면 <span class="kbd">F5</span></span></div></div>
+    </div>
+  </section>
+
+  <!-- 8. 지번/카카오 -->
+  <section>
+    <div class="eyebrow"><span class="num">8</span> 참고</div>
+    <h2 class="title">지번이 안 채워질 때</h2>
+    <div class="callout warn">
+      <span class="ci">⚠️</span>
+      <div>
+        <b>상단에 “⚠ 지번 자동변환 중단”이 뜨면</b>
+        <p>카카오 지도 API가 아직 안 켜진 것입니다(403). <code>developers.kakao.com</code> → 내 애플리케이션 → 앱 → <b>카카오맵</b> → <b>사용 설정 ON</b> → 저장 후 새로고침하세요. (무료)</p>
+      </div>
+    </div>
+    <div class="callout">
+      <span class="ci">🎯</span>
+      <div><b>더 정확한 지번을 원하면</b><p>목록 좌표는 대략치일 수 있습니다. 필요하면 <b>📍지도</b> 링크로 그 위치를 열어 우클릭으로 정확한 지번을 확인하세요.</p></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    네이버부동산 매물정리 확장앱 · 사용 매뉴얼<br>
+    개인 임장 기록용 도구입니다. 데이터는 보고 있는 화면에서만 수집됩니다.
+  </div>
+
+</div>
+</div>

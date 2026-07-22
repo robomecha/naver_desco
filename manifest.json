@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "네이버부동산 매물정리 표",
+  "version": "1.0.0",
+  "description": "네이버페이 부동산(fin.land.naver.com) 매물 목록을 주소·보증금/월세·매매가·평단가·사용승인년도 표로 정리하고 CSV/엑셀로 내보냅니다.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": ["clipboardWrite", "storage"],
+  "host_permissions": [
+    "https://fin.land.naver.com/*",
+    "https://new.land.naver.com/*",
+    "https://www.disco.re/*",
+    "https://disco.re/*",
+    "https://dapi.kakao.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://fin.land.naver.com/*",
+        "https://new.land.naver.com/*",
+        "https://www.disco.re/*",
+        "https://disco.re/*"
+      ],
+      "js": ["src/inject.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://fin.land.naver.com/*",
+        "https://new.land.naver.com/*",
+        "https://www.disco.re/*",
+        "https://disco.re/*"
+      ],
+      "js": ["src/content.js"],
+      "css": ["src/panel.css"],
+      "run_at": "document_start",
+      "world": "ISOLATED"
+    }
+  ]
+}
