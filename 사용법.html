@@ -1,9 +1,11 @@
-<title>네이버부동산 매물정리 사용법</title>
+<title>네이버부동산·디스코 매물정리 사용법</title>
 <style>
   :root {
     --green: #03c75a;
     --green-deep: #02a94c;
     --green-soft: #e6f7ee;
+    --blue: #1565c0;
+    --blue-soft: #e8f1fb;
     --ink: #16211c;
     --muted: #5f7268;
     --line: #dfe7e1;
@@ -19,7 +21,7 @@
   @media (prefers-color-scheme: dark) {
     :root {
       --ink: #e7efe9; --muted: #93a79b; --line: #26312b;
-      --paper: #10150f; --card: #171e19; --green-soft: #12281c;
+      --paper: #10150f; --card: #171e19; --green-soft: #12281c; --blue-soft: #142334;
       --shadow: 0 6px 22px rgba(0, 0, 0, 0.4);
       --t-deal: #16233a;   --t-deal-ink: #93c0f5;
       --t-jeonse: #14291d; --t-jeonse-ink: #7fd6a2;
@@ -29,7 +31,7 @@
   }
   :root[data-theme="dark"] {
     --ink: #e7efe9; --muted: #93a79b; --line: #26312b;
-    --paper: #10150f; --card: #171e19; --green-soft: #12281c;
+    --paper: #10150f; --card: #171e19; --green-soft: #12281c; --blue-soft: #142334;
     --shadow: 0 6px 22px rgba(0, 0, 0, 0.4);
     --t-deal: #16233a; --t-deal-ink: #93c0f5;
     --t-jeonse: #14291d; --t-jeonse-ink: #7fd6a2;
@@ -38,7 +40,7 @@
   }
   :root[data-theme="light"] {
     --ink: #16211c; --muted: #5f7268; --line: #dfe7e1;
-    --paper: #f4f8f5; --card: #ffffff; --green-soft: #e6f7ee;
+    --paper: #f4f8f5; --card: #ffffff; --green-soft: #e6f7ee; --blue-soft: #e8f1fb;
     --shadow: 0 6px 22px rgba(16, 40, 28, 0.08);
     --t-deal: #eaf3ff; --t-deal-ink: #1f5fae;
     --t-jeonse: #eafaf0; --t-jeonse-ink: #1c884a;
@@ -55,15 +57,12 @@
     -webkit-font-smoothing: antialiased;
     padding: 0 16px 64px;
   }
-  .container { max-width: 860px; margin: 0 auto; }
+  .container { max-width: 900px; margin: 0 auto; }
   .wrap h1, .wrap h2, .wrap h3 { text-wrap: balance; margin: 0; }
   .wrap p { margin: 0; }
 
   /* ===== Hero ===== */
-  .hero {
-    text-align: center;
-    padding: 56px 20px 40px;
-  }
+  .hero { text-align: center; padding: 56px 20px 40px; }
   .brandpill {
     display: inline-flex; align-items: center; gap: 8px;
     background: var(--green); color: #fff;
@@ -71,29 +70,38 @@
     padding: 9px 16px; border-radius: 999px;
     box-shadow: 0 4px 14px rgba(3, 199, 90, 0.35);
   }
+  .brandpill.blue { background: var(--blue); box-shadow: 0 4px 14px rgba(21,101,192,0.35); }
   .brandpill .dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; }
   .hero h1 {
-    font-size: clamp(30px, 6vw, 46px); font-weight: 800; letter-spacing: -0.02em;
+    font-size: clamp(28px, 5.6vw, 44px); font-weight: 800; letter-spacing: -0.02em;
     margin: 22px 0 10px; line-height: 1.15;
   }
   .hero h1 .hl { color: var(--green); }
-  .hero .sub { color: var(--muted); font-size: clamp(15px, 2.4vw, 18px); max-width: 40ch; margin: 0 auto; }
+  .hero h1 .hl2 { color: var(--blue); }
+  .hero .sub { color: var(--muted); font-size: clamp(15px, 2.2vw, 18px); max-width: 46ch; margin: 0 auto; }
   .hero .meta { margin-top: 18px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .sitepills { display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+  .sitepill {
+    font-size: 12.5px; font-weight: 700; padding: 5px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--card); color: var(--muted);
+  }
 
   /* ===== Section ===== */
-  section { margin-top: 30px; }
+  section { margin-top: 34px; }
   .eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
     font-size: 12px; font-weight: 800; letter-spacing: 0.12em;
     color: var(--green-deep); text-transform: uppercase;
     margin-bottom: 14px;
   }
+  .eyebrow.blue { color: var(--blue); }
   .eyebrow .num {
     display: inline-grid; place-items: center;
     width: 22px; height: 22px; border-radius: 6px;
     background: var(--green); color: #fff; font-size: 12px;
   }
-  h2.title { font-size: clamp(20px, 3.4vw, 26px); font-weight: 800; letter-spacing: -0.01em; }
+  .eyebrow.blue .num { background: var(--blue); }
+  h2.title { font-size: clamp(20px, 3.2vw, 25px); font-weight: 800; letter-spacing: -0.01em; }
   .lead { color: var(--muted); margin-top: 6px; font-size: 15px; }
 
   .card {
@@ -117,6 +125,15 @@
     white-space: nowrap;
   }
 
+  /* ===== Two-column site compare ===== */
+  .compare { display: grid; gap: 14px; grid-template-columns: 1fr; margin-top: 16px; }
+  @media (min-width: 700px) { .compare { grid-template-columns: 1fr 1fr; } }
+  .cpane { border: 1px solid var(--line); border-radius: 14px; padding: 18px; background: var(--card); }
+  .cpane .cph { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14.5px; margin-bottom: 10px; }
+  .cpane.naver .cph { color: var(--green-deep); }
+  .cpane.disco .cph { color: var(--blue); }
+  .cpane ol.mini { margin-top: 4px; }
+
   /* ===== Auto features ===== */
   .autos { display: grid; gap: 12px; grid-template-columns: 1fr; }
   @media (min-width: 560px) { .autos { grid-template-columns: 1fr 1fr; } }
@@ -130,6 +147,7 @@
     display: grid; place-items: center; font-size: 19px;
     background: var(--green-soft);
   }
+  .auto.blue .ic { background: var(--blue-soft); }
   .auto b { display: block; font-size: 15px; margin-bottom: 2px; }
   .auto span { font-size: 13px; color: var(--muted); line-height: 1.5; }
   .autos-note {
@@ -150,7 +168,8 @@
   }
   .mock-title { font-weight: 700; font-size: 14px; }
   .mock-title b { color: var(--green); }
-  .mtools { display: flex; gap: 6px; flex-wrap: wrap; }
+  .mock-title.blue-t b { color: var(--blue); }
+  .mtools { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .mchk, .mbtn {
     font-size: 11.5px; font-weight: 600; border: 1px solid var(--line);
     border-radius: 7px; padding: 5px 9px; background: var(--card); color: var(--ink);
@@ -158,6 +177,14 @@
   }
   .mbtn.g { background: var(--green); border-color: var(--green); color: #fff; }
   .mbtn.on { background: var(--green); border-color: var(--green); color: #fff; }
+  .muser {
+    font-size: 11px; font-weight: 700; background: var(--green-soft); color: var(--green-deep);
+    border: 1px solid var(--line); border-radius: 12px; padding: 3px 9px; white-space: nowrap;
+  }
+  .mclose {
+    width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--card); display: inline-grid; place-items: center; font-size: 12px; color: var(--muted);
+  }
   .msort { display: inline-flex; gap: 4px; align-items: center; border: 1px solid var(--line); border-radius: 7px; padding: 3px 6px; font-size: 11px; font-weight: 700; color: var(--muted); }
   .msort .sb { font-size: 11.5px; font-weight: 600; border: 1px solid var(--line); border-radius: 5px; padding: 3px 7px; background: var(--card); color: var(--ink); }
   .msep { width: 1px; align-self: stretch; background: var(--line); margin: 1px 3px; }
@@ -181,7 +208,7 @@
   .cols { display: grid; gap: 10px; grid-template-columns: 1fr; margin-top: 16px; }
   @media (min-width: 560px) { .cols { grid-template-columns: 1fr 1fr; } }
   .col { display: flex; gap: 10px; align-items: baseline; font-size: 13.5px; }
-  .col .name { font-weight: 700; color: var(--ink); min-width: 92px; flex: none; }
+  .col .name { font-weight: 700; color: var(--ink); min-width: 96px; flex: none; }
   .col .desc { color: var(--muted); }
 
   /* ===== Legend ===== */
@@ -210,12 +237,35 @@
     background: var(--card); border-radius: 12px; padding: 16px 18px; margin-top: 14px;
   }
   .callout.warn { border-left-color: #e0902a; }
+  .callout.blue { border-left-color: var(--blue); }
   .callout .ci { font-size: 20px; flex: none; }
   .callout b { font-size: 14.5px; }
   .callout p { font-size: 13.5px; color: var(--muted); margin-top: 3px; }
   .callout code { font-family: ui-monospace, Consolas, monospace; background: var(--green-soft); color: var(--green-deep); padding: 1px 5px; border-radius: 5px; font-size: 12.5px; }
 
-  .foot { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); }
+  /* ===== Mapping card mock ===== */
+  .mapcards { display: grid; gap: 12px; grid-template-columns: 1fr; margin-top: 16px; }
+  @media (min-width: 620px) { .mapcards { grid-template-columns: 1fr 1fr; } }
+  .mapcard {
+    border-radius: 12px; padding: 14px 16px; font-size: 12.5px; line-height: 1.55;
+    border-left: 5px solid; background: var(--card); border: 1px solid var(--line);
+  }
+  .mapcard.g { border-left-color: var(--green); }
+  .mapcard.b { border-left-color: var(--blue); }
+  .mapcard b.tag { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .mapcard.g b.tag { color: var(--green-deep); }
+  .mapcard.b b.tag { color: var(--blue); }
+  .mapcard .addr { color: var(--muted); }
+
+  /* ===== FAQ ===== */
+  .faq { display: grid; gap: 10px; margin-top: 16px; }
+  .qa { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--card); }
+  .qa .q { font-weight: 700; font-size: 14px; display: flex; gap: 8px; }
+  .qa .q .qm { color: var(--green-deep); flex: none; }
+  .qa .a { margin-top: 6px; font-size: 13.5px; color: var(--muted); }
+  .qa .a code { font-family: ui-monospace, Consolas, monospace; background: var(--green-soft); color: var(--green-deep); padding: 1px 5px; border-radius: 5px; font-size: 12.5px; }
+
+  .foot { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--line); }
 
   ol.mini { margin: 10px 0 0; padding-left: 20px; }
   ol.mini li { font-size: 13.5px; color: var(--muted); margin-bottom: 4px; }
@@ -227,10 +277,16 @@
 
   <!-- HERO -->
   <div class="hero">
-    <span class="brandpill"><span class="dot"></span>네이버부동산 매물정리</span>
-    <h1>매물을 <span class="hl">표 한 장</span>으로<br>자동 정리하는 크롬 확장앱</h1>
-    <p class="sub">네이버페이 부동산에서 매물을 보기만 하면, 주소·가격·평단가·지번·사용승인 년차가 표로 쌓입니다.</p>
-    <p class="meta">사용 사이트 · fin.land.naver.com &nbsp;|&nbsp; 크롬 전용</p>
+    <span class="brandpill"><span class="dot"></span>네이버부동산</span>
+    <span class="brandpill blue"><span class="dot"></span>디스코</span>
+    <h1>매물·실거래를 <span class="hl">표 한 장</span>으로<br>자동 정리하는 <span class="hl2">크롬 확장앱</span></h1>
+    <p class="sub">네이버페이 부동산에서는 매물을, 디스코(disco.re)에서는 실거래가를 클릭하는 대로 표로 모으고, CSV·엑셀·지도로 내보냅니다.</p>
+    <div class="sitepills">
+      <span class="sitepill">fin.land.naver.com</span>
+      <span class="sitepill">new.land.naver.com</span>
+      <span class="sitepill">disco.re</span>
+    </div>
+    <p class="meta">크롬 전용 · 개인 임장 기록용 도구</p>
   </div>
 
   <!-- 1. 설치 -->
@@ -254,19 +310,38 @@
         <p><b>압축해제된 확장 프로그램 로드</b> → <span class="kbd">네이버부동산매물정리</span> 폴더 선택</p>
       </div>
     </div>
+    <div class="callout">
+      <span class="ci">🔄</span>
+      <div><b>코드를 수정했다면</b><p><span class="kbd">chrome://extensions</span> 화면에서 이 확장의 새로고침(⟳) 버튼을 누른 뒤, 사이트도 새로고침(F5)해야 반영됩니다.</p></div>
+    </div>
   </section>
 
   <!-- 2. 시작 -->
   <section>
     <div class="eyebrow"><span class="num">2</span> 시작</div>
-    <h2 class="title">패널 열기</h2>
-    <p class="lead">설치 후엔 그냥 부동산을 둘러보기만 하면 됩니다.</p>
-    <div class="card" style="margin-top:16px">
-      <ol class="mini">
-        <li><b>fin.land.naver.com</b> 에서 원하는 지역·종류의 매물 목록을 엽니다.</li>
-        <li>목록을 <b>스크롤</b>하면 오른쪽 아래 <span class="brandpill" style="padding:4px 11px;font-size:12px;box-shadow:none"><span class="dot"></span>매물정리 <b style="background:#fff;color:var(--green-deep);border-radius:8px;padding:0 6px;margin-left:4px">22</b></span> 버튼의 숫자가 올라갑니다.</li>
-        <li>그 버튼을 <b>클릭</b>하면 정리된 표 패널이 열립니다.</li>
-      </ol>
+    <h2 class="title">사이트별로 시작하는 방법이 달라요</h2>
+    <p class="lead">네이버는 <b>패널을 먼저 열어야</b> 그때부터 수집되고, 디스코는 <b>클릭하는 즉시</b> 패널을 열지 않아도 수집됩니다.</p>
+    <div class="compare">
+      <div class="cpane naver">
+        <div class="cph">🟢 네이버부동산</div>
+        <ol class="mini">
+          <li><b>fin.land.naver.com</b> 에서 원하는 지역·종류의 매물 목록을 엽니다.</li>
+          <li>오른쪽 아래 <span class="brandpill" style="padding:3px 10px;font-size:11.5px;box-shadow:none"><span class="dot"></span>매물정리</span> 버튼을 <b>먼저 클릭</b>해 패널을 엽니다.</li>
+          <li>그 다음부터 목록을 <b>스크롤</b>하면 표에 자동으로 쌓입니다.</li>
+        </ol>
+      </div>
+      <div class="cpane disco">
+        <div class="cph">🔵 디스코</div>
+        <ol class="mini">
+          <li><b>disco.re</b> 지도에서 관심 있는 <b>필지·건물을 클릭</b>합니다.</li>
+          <li>상세 패널에서 <b>"실거래" 탭</b>을 열고, 목록의 <b>개별 실거래내역을 클릭</b>합니다.</li>
+          <li>패널을 아직 안 열어도 <b>클릭하는 순간 바로 수집</b>됩니다. 나중에 오른쪽 아래 <span class="brandpill blue" style="padding:3px 10px;font-size:11.5px;box-shadow:none"><span class="dot"></span>실거래</span> 버튼을 눌러 모아둔 걸 확인하세요.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="callout">
+      <span class="ci">💡</span>
+      <div><b>왜 다른가요?</b><p>네이버는 페이지가 미리 목록 일부를 자동으로 불러올 수 있어, 패널을 열기 전까지는 일부러 수집을 막습니다. 디스코는 필지·실거래를 <b>실제로 클릭할 때만</b> 데이터가 오기 때문에, 패널 상태와 무관하게 클릭 즉시 잡아둡니다.</p></div>
     </div>
   </section>
 
@@ -276,28 +351,36 @@
     <h2 class="title">버튼 없이 알아서 되는 것들</h2>
     <p class="lead">따로 누를 필요 없이 백그라운드에서 처리됩니다.</p>
     <div class="autos" style="margin-top:16px">
-      <div class="auto"><div class="ic">📥</div><div><b>매물 자동 수집</b><span>스크롤하는 대로 표에 쌓임</span></div></div>
-      <div class="auto"><div class="ic">📍</div><div><b>지번 자동 채우기</b><span>좌표를 카카오 지도로 변환해 동 → 지번까지</span></div></div>
+      <div class="auto"><div class="ic">📥</div><div><b>매물 자동 수집</b><span>네이버: 스크롤하는 대로 표에 쌓임</span></div></div>
+      <div class="auto blue"><div class="ic">🖱️</div><div><b>실거래 클릭 수집</b><span>디스코: 실거래내역 항목을 클릭할 때마다 한 줄씩 쌓임(같은 항목 재클릭은 중복 안 됨)</span></div></div>
+      <div class="auto"><div class="ic">📍</div><div><b>지번 자동 채우기</b><span>네이버: 좌표를 카카오 지도로 변환해 동 → 지번까지</span></div></div>
       <div class="auto"><div class="ic">🏗️</div><div><b>사용승인 년차</b><span>준공 후 경과 년차로 자동 표시</span></div></div>
-      <div class="auto"><div class="ic">🧹</div><div><b>동일매물 합치기</b><span>여러 중개사가 올린 같은 물건은 한 줄로</span></div></div>
-      <div class="auto"><div class="ic">🎯</div><div><b>현재 지역·종류만</b><span>다른 지역·엉뚱한 종류가 섞이면 자동 숨김</span></div></div>
+      <div class="auto"><div class="ic">🧹</div><div><b>동일매물 합치기</b><span>여러 중개사가 올린 같은 물건은 한 줄로(네이버)</span></div></div>
+      <div class="auto"><div class="ic">🎯</div><div><b>현재 지역·종류만</b><span>다른 지역·엉뚱한 종류가 섞이면 자동 숨김(네이버)</span></div></div>
       <div class="auto"><div class="ic">📐</div><div><b>평단가 자동 계산</b><span>전용면적 기준 만원/평, 월세는 평당월세</span></div></div>
+      <div class="auto blue"><div class="ic">🏛️</div><div><b>용도지역·지목·면적 분리</b><span>디스코: 토지면적과 건물면적을 따로 표시</span></div></div>
     </div>
     <p class="autos-note">✔ 지번은 <b>지번 자동</b> 체크박스가 켜져 있으면 계속 채워집니다 — 같은 좌표는 한 번만 조회해 아껴 씁니다.</p>
   </section>
 
-  <!-- 4. 표 읽는 법 -->
+  <!-- 4. 표 읽는 법 : 네이버 -->
   <section>
-    <div class="eyebrow"><span class="num">4</span> 표</div>
-    <h2 class="title">표 읽는 법</h2>
-    <p class="lead">거래유형에 따라 행 색이 다릅니다. 아래는 실제 화면 예시입니다.</p>
+    <div class="eyebrow"><span class="num">4</span> 표 · 네이버</div>
+    <h2 class="title">매물정리 표 읽는 법</h2>
+    <p class="lead">거래유형에 따라 행 색이 다릅니다. 패널은 <b>제목줄을 드래그해서 원하는 위치로 옮길 수 있습니다.</b></p>
     <div class="mock" style="margin-top:16px">
       <div class="mock-head">
         <div class="mock-title">📋 매물정리 <b>22</b>건</div>
         <div class="mtools">
+          <span class="muser">👤 김명국</span>
+          <span class="mclose">✕</span>
+        </div>
+      </div>
+      <div class="mock-head" style="border-top:1px solid var(--line)">
+        <div class="mtools">
           <span class="mchk">☑ 지번 자동</span>
           <span class="msort">정렬<span class="sb on" style="background:var(--green);border-color:var(--green);color:#fff">월세</span><span class="msep"></span><span class="sb">신축순</span></span>
-          <span class="mbtn">CSV</span><span class="mbtn">엑셀</span>
+          <span class="mbtn">CSV</span><span class="mbtn">엑셀</span><span class="mbtn">🗺 지도</span>
         </div>
       </div>
       <div class="tbl-scroll">
@@ -327,10 +410,40 @@
     </div>
   </section>
 
+  <!-- 4b. 표 읽는 법 : 디스코 -->
+  <section>
+    <div class="eyebrow blue"><span class="num">4b</span> 표 · 디스코</div>
+    <h2 class="title">실거래 표 읽는 법</h2>
+    <p class="lead">필지 하나에 여러 실거래(호실별)가 있으면, 클릭한 항목마다 한 줄씩 쌓입니다.</p>
+    <div class="mock" style="margin-top:16px">
+      <div class="mock-head">
+        <div class="mock-title blue-t">🧾 디스코 실거래 <b>3</b>건</div>
+        <div class="mtools"><span class="mclose">✕</span></div>
+      </div>
+      <div class="tbl-scroll">
+        <table class="mtbl">
+          <thead><tr>
+            <th>거래일</th><th>주소</th><th>건물명</th><th>종류</th><th>용도지역</th><th>지목</th><th>실거래가</th><th>평단가</th><th>토지면적</th><th>건물면적</th><th>층수</th>
+          </tr></thead>
+          <tbody>
+            <tr class="r-jeonse"><td>2026.07.16</td><td>서울 서초구 서초동 1301-6</td><td>래미안서초스위트</td><td>아파트</td><td>제3종일반주거지역</td><td>대</td><td>12억</td><td>—</td><td>—</td><td>85.0㎡ (25.7평)</td><td>5</td></tr>
+            <tr class="r-rent"><td>2026.07.16</td><td>서울 서초구 서초동 1301-6</td><td>래미안서초스위트</td><td>아파트</td><td>제3종일반주거지역</td><td>대</td><td>보증7억/월115</td><td>—</td><td>—</td><td>85.0㎡ (25.7평)</td><td>20</td></tr>
+            <tr class="r-deal"><td>2024.10.24</td><td>인천 남동구 운연동 13-2</td><td>—</td><td>토지</td><td>제1종일반주거지역</td><td>대</td><td>3억 4,516</td><td>761</td><td>150㎡ (45.4평)</td><td>—</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col"><span class="name">용도지역·지목</span><span class="desc">디스코 필지 정보에서 그대로</span></div>
+      <div class="col"><span class="name">토지면적</span><span class="desc">단독건물·토지일 때만 표시</span></div>
+      <div class="col"><span class="name">건물면적</span><span class="desc">집합건물(아파트 등)은 전용면적, 일반건물은 연면적</span></div>
+    </div>
+  </section>
+
   <!-- 5. 색상 -->
   <section>
     <div class="eyebrow"><span class="num">5</span> 색상</div>
-    <h2 class="title">거래유형 색 구분</h2>
+    <h2 class="title">거래유형 색 구분 (표 안 행 색)</h2>
     <div class="legend" style="margin-top:16px">
       <div class="lg deal"><b>매매</b><span>연파랑</span></div>
       <div class="lg jeonse"><b>전세</b><span>연초록</span></div>
@@ -370,34 +483,80 @@
   <!-- 7. 내보내기 -->
   <section>
     <div class="eyebrow"><span class="num">7</span> 내보내기</div>
-    <h2 class="title">저장 · 초기화</h2>
+    <h2 class="title">저장 · 지도 연동 · 초기화</h2>
     <div class="autos" style="margin-top:16px">
       <div class="auto"><div class="ic">📄</div><div><b>CSV</b><span>엑셀·구글시트에서 여는 파일</span></div></div>
       <div class="auto"><div class="ic">📊</div><div><b>엑셀</b><span>서식이 있는 표 파일(.xls)</span></div></div>
       <div class="auto"><div class="ic">📋</div><div><b>복사</b><span>바로 붙여넣기용 표(엑셀·시트에 Ctrl+V)</span></div></div>
+      <div class="auto"><div class="ic">🗺</div><div><b>지도</b><span>좌표 포함 JSON — 부동산 맵핑 도구에서 바로 불러오기</span></div></div>
       <div class="auto"><div class="ic">🗑️</div><div><b>초기화</b><span>표 비우기 · 처음부터 다시 모으려면 <span class="kbd">F5</span></span></div></div>
     </div>
   </section>
 
-  <!-- 8. 지번/카카오 -->
+  <!-- 7b. 맵핑 도구 연동 -->
+  <section>
+    <div class="eyebrow"><span class="num">7b</span> 연동</div>
+    <h2 class="title">부동산 맵핑 도구로 보내기</h2>
+    <p class="lead"><b>🗺 지도</b> 버튼으로 내보낸 JSON을 맵핑 도구의 <b>매물 불러오기</b>로 열면, 출처별로 카드 색이 자동 구분됩니다.</p>
+    <div class="mapcards">
+      <div class="mapcard g">
+        <b class="tag">🟢 네이버 매물</b>
+        <div class="addr">시흥시 장곡동 823-3 · 월세 1,000/80</div>
+      </div>
+      <div class="mapcard b">
+        <b class="tag">🔵 디스코 실거래</b>
+        <div class="addr">서초구 서초동 1301-6 · 전세 12억 · 제3종일반주거지역</div>
+      </div>
+    </div>
+    <div class="callout">
+      <span class="ci">📌</span>
+      <div><b>배포 주소</b><p><code>mapping.dothome.co.kr</code> — 맵핑 도구 자체를 수정한 경우 FTP로 업로드하고 <code>index.html</code>의 버전 쿼리(<code>?v=</code>)를 올려야 반영됩니다.</p></div>
+    </div>
+  </section>
+
+  <!-- 8. 참고 -->
   <section>
     <div class="eyebrow"><span class="num">8</span> 참고</div>
     <h2 class="title">지번이 안 채워질 때</h2>
     <div class="callout warn">
       <span class="ci">⚠️</span>
       <div>
-        <b>상단에 “⚠ 지번 자동변환 중단”이 뜨면</b>
+        <b>상단에 "⚠ 지번 자동변환 중단"이 뜨면</b>
         <p>카카오 지도 API가 아직 안 켜진 것입니다(403). <code>developers.kakao.com</code> → 내 애플리케이션 → 앱 → <b>카카오맵</b> → <b>사용 설정 ON</b> → 저장 후 새로고침하세요. (무료)</p>
       </div>
     </div>
     <div class="callout">
       <span class="ci">🎯</span>
-      <div><b>더 정확한 지번을 원하면</b><p>목록 좌표는 대략치일 수 있습니다. 필요하면 <b>📍지도</b> 링크로 그 위치를 열어 우클릭으로 정확한 지번을 확인하세요.</p></div>
+      <div><b>더 정확한 지번을 원하면</b><p>목록 좌표는 대략치일 수 있습니다. 필요하면 <b>📍지도</b> 링크로 그 위치를 열어 우클릭으로 정확한 지번을 확인하세요. 디스코는 필지 정보 자체에 지번이 있어 이 과정이 필요 없습니다.</p></div>
+    </div>
+  </section>
+
+  <!-- 9. FAQ -->
+  <section>
+    <div class="eyebrow"><span class="num">9</span> Q&A</div>
+    <h2 class="title">자주 묻는 것들</h2>
+    <div class="faq">
+      <div class="qa">
+        <div class="q"><span class="qm">Q.</span> 패널이 화면 다른 곳을 가려요.</div>
+        <div class="a">패널 상단 제목줄을 <b>클릭한 채로 드래그</b>하면 원하는 위치로 옮길 수 있습니다. 버튼·체크박스 위에서는 드래그가 시작되지 않습니다.</div>
+      </div>
+      <div class="qa">
+        <div class="q"><span class="qm">Q.</span> 사이트를 켜기만 했는데 매물이 몇 개 쌓여 있어요.</div>
+        <div class="a">네이버는 패널을 <b>처음 열기 전까지 수집하지 않도록</b> 되어 있습니다. 그래도 쌓여 보인다면 F5로 새로고침 후 패널을 먼저 열고 스크롤해 보세요.</div>
+      </div>
+      <div class="qa">
+        <div class="q"><span class="qm">Q.</span> 디스코에서 실거래내역을 클릭해도 안 쌓여요.</div>
+        <div class="a">클릭한 게 <b>매물(호가) 광고 카드</b>인지 확인하세요 — 그 카드의 "실거래 0" 은 진짜 완료된 거래가 없다는 뜻이라 수집할 게 없습니다. 지도 위 <b>필지·건물 도형 자체</b>를 클릭해 상세 패널의 실거래 탭에서 항목을 눌러야 합니다.</div>
+      </div>
+      <div class="qa">
+        <div class="q"><span class="qm">Q.</span> 같은 매물이 여러 줄로 보여요.</div>
+        <div class="a">네이버는 종류·거래·가격·면적·층·주소가 <b>전부 같으면</b> 자동으로 한 줄로 합칩니다(중개사만 다른 매물). 그래도 남아있다면 주소가 아직 동까지만 채워져 판단 기준이 달라서일 수 있습니다 — 지번이 채워지면 정확도가 올라갑니다.</div>
+      </div>
     </div>
   </section>
 
   <div class="foot">
-    네이버부동산 매물정리 확장앱 · 사용 매뉴얼<br>
+    네이버부동산·디스코 매물정리 확장앱 · 사용 매뉴얼<br>
     개인 임장 기록용 도구입니다. 데이터는 보고 있는 화면에서만 수집됩니다.
   </div>
 

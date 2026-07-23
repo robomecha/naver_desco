@@ -1936,17 +1936,29 @@
     download("네이버부동산_매물정리_" + stamp() + ".csv", csv, "text/csv");
   }
 
-  function exportXLS() {
-    // 엑셀이 여는 HTML 테이블(.xls)
+  // "1/5", "3/4" 같은 층 표기를 엑셀이 날짜(5월 1일 등)로 잘못 인식해 셀이 깨지는 문제 방지.
+  // mso-number-format:"\@" 는 엑셀 전용 스타일로, 해당 셀을 무조건 텍스트로 취급하게 강제한다.
+  function buildXlsHtml() {
+    var textColKeys = { floor: true };
+    var textColIdx = {};
+    for (var i = 0; i < COLUMNS.length; i++) if (textColKeys[COLUMNS[i].key]) textColIdx[i] = true;
+
     var m = buildMatrix();
     var thtml = "<table border='1'>" + m.map(function (row, ri) {
       var tag = ri === 0 ? "th" : "td";
-      return "<tr>" + row.map(function (cell) {
-        return "<" + tag + ">" + escapeHtml(cell) + "</" + tag + ">";
+      return "<tr>" + row.map(function (cell, ci) {
+        // buildMatrix 의 열 순서: [번호, ...COLUMNS, 매물번호] → COLUMNS 인덱스는 ci-1
+        var asText = ri > 0 && textColIdx[ci - 1];
+        var styleAttr = asText ? " style='mso-number-format:\"\\@\"'" : "";
+        return "<" + tag + styleAttr + ">" + escapeHtml(cell) + "</" + tag + ">";
       }).join("") + "</tr>";
     }).join("") + "</table>";
-    var html = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"></head><body>' + thtml + "</body></html>";
-    download("네이버부동산_매물정리_" + stamp() + ".xls", html, "application/vnd.ms-excel");
+    return '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"></head><body>' + thtml + "</body></html>";
+  }
+
+  function exportXLS() {
+    var fnPrefix2 = IS_DISCO ? "디스코실거래_" : "네이버매물정리_";
+    download(fnPrefix2 + stamp() + ".xls", buildXlsHtml(), "application/vnd.ms-excel");
   }
 
   // 필지 맵핑 도구용: 좌표 포함 JSON 내보내기 ("매물 불러오기"로 즉시 오버레이 생성)
