@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개인정보처리방침 · 네이버부동산·디스코 매물정리</title>
+<style>
+  :root {
+    --ink: #1c2620;
+    --muted: #5f7268;
+    --line: #dfe7e1;
+    --paper: #f6f9f7;
+    --card: #ffffff;
+    --green: #03c75a;
+    --green-deep: #02964a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink:#e7efe9; --muted:#93a79b; --line:#283029; --paper:#0f1410; --card:#171e19; }
+  }
+  :root[data-theme="dark"] { --ink:#e7efe9; --muted:#93a79b; --line:#283029; --paper:#0f1410; --card:#171e19; }
+  :root[data-theme="light"] { --ink:#1c2620; --muted:#5f7268; --line:#dfe7e1; --paper:#f6f9f7; --card:#ffffff; }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: "Pretendard Variable", Pretendard, "Malgun Gothic", "맑은 고딕", -apple-system, system-ui, sans-serif;
+    line-height: 1.75; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 56px 20px 80px; }
+  header { margin-bottom: 36px; }
+  header .kicker { font-size: 12.5px; font-weight: 700; letter-spacing: .08em; color: var(--green-deep); text-transform: uppercase; }
+  h1 { font-size: clamp(24px, 4vw, 30px); font-weight: 800; letter-spacing: -0.01em; margin: 10px 0 6px; text-wrap: balance; }
+  .meta { color: var(--muted); font-size: 13.5px; }
+
+  section { margin-top: 34px; }
+  h2 {
+    font-size: 17.5px; font-weight: 800; margin: 0 0 12px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--line);
+  }
+  h2 .no { color: var(--green-deep); margin-right: 6px; }
+  h3 { font-size: 14.5px; font-weight: 700; margin: 16px 0 6px; }
+  p { margin: 0 0 10px; font-size: 14.5px; }
+  ul, ol { margin: 0 0 10px; padding-left: 20px; }
+  li { font-size: 14.5px; margin-bottom: 5px; }
+  li b, p b { color: var(--ink); }
+
+  table { width: 100%; border-collapse: collapse; margin: 10px 0 6px; font-size: 13.5px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 700; width: 30%; white-space: nowrap; }
+
+  .box {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px; margin: 12px 0;
+  }
+  .box.point { border-left: 4px solid var(--green); }
+  code {
+    font-family: ui-monospace, Consolas, monospace; font-size: 13px;
+    background: color-mix(in srgb, var(--green) 12%, var(--card));
+    color: var(--green-deep); padding: 1px 6px; border-radius: 5px;
+  }
+
+  footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 12.5px; text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">Privacy Policy</div>
+    <h1>개인정보처리방침</h1>
+    <p class="meta">네이버부동산·디스코 매물정리 (크롬 확장 프로그램) · 시행일 2026년 7월 24일</p>
+  </header>
+
+  <section>
+    <h2><span class="no">1.</span>요약</h2>
+    <div class="box point">
+      <p>이 확장 프로그램은 <b>회원가입·로그인이 없고, 별도의 수집 서버를 운영하지 않습니다.</b>
+      사용자가 보고 있는 네이버부동산·디스코 페이지가 자체적으로 불러오는 <b>공개된 부동산 매물·실거래
+      정보</b>(주소, 가격, 면적, 층, 사용승인일 등)를 브라우저 안에서만 정리해서 보여주며, 이 데이터는
+      <b>브라우저 메모리에만 저장</b>되어 새로고침하면 사라집니다. 이름·연락처·로그인 계정 같은
+      개인 식별정보는 수집하지 않습니다.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">2.</span>수집하는 정보</h2>
+    <h3>2-1. 매물·실거래 정보 (부동산 공개정보)</h3>
+    <p>다음 사이트에 접속해 있는 동안, 그 페이지가 스스로 서버에 요청해서 받아오는 응답을
+    가로채(intercept) 표로 정리합니다. 확장앱이 별도로 어딘가에 요청을 보내 데이터를
+    긁어오지 않으며, <b>사용자가 실제로 보고 있는 화면의 데이터만</b> 처리합니다.</p>
+    <table>
+      <tr><th>대상 사이트</th><td><code>fin.land.naver.com</code>, <code>new.land.naver.com</code>, <code>disco.re</code></td></tr>
+      <tr><th>수집 항목</th><td>매물 주소, 종류, 거래유형(매매/전세/월세), 가격, 면적, 층, 사용승인년도,
+        용도지역, 지목, 좌표(위경도) 등 — 모두 해당 부동산 사이트가 공개적으로 제공하는 정보입니다.</td></tr>
+      <tr><th>수집 방식</th><td>페이지가 자체적으로 호출하는 fetch/XHR 응답을 콘텐츠 스크립트가 읽어들임
+        (네트워크 요청을 새로 만들지 않음). 네이버는 매물 목록을 스크롤할 때, 디스코는 필지·실거래
+        항목을 클릭할 때 정리됩니다.</td></tr>
+      <tr><th>저장 위치</th><td>브라우저 탭의 자바스크립트 메모리(변수). <b>디스크나 서버에 저장하지 않으며,
+        페이지를 새로고침(F5)하거나 탭을 닫으면 사라집니다.</b> "초기화" 버튼으로 언제든 즉시 삭제할 수
+        있습니다.</td></tr>
+    </table>
+
+    <h3>2-2. 확장 프로그램 설정 (브라우저 로컬 저장)</h3>
+    <p>카카오 지도 API를 이용한 지번(주소) 변환 기능을 위해, 아래 정보만 <code>chrome.storage.local</code>
+    (이 브라우저 안에만 저장되는 공간)에 저장될 수 있습니다.</p>
+    <ul>
+      <li><b>카카오 REST API 키</b> — 사용자가 직접 입력하거나, 기본 제공 키가 사용됩니다. 좌표↔주소
+        변환 요청 시에만 쓰입니다.</li>
+    </ul>
+    <p>이 값은 이 브라우저에만 남아 있으며, 확장 프로그램을 삭제하면 함께 삭제됩니다.</p>
+
+    <h3>2-3. 수집하지 않는 정보</h3>
+    <ul>
+      <li>이름, 이메일, 전화번호, 로그인 계정 등 개인 식별정보</li>
+      <li>결제·금융 정보</li>
+      <li>방문 기록, 검색어, 위치정보(사용자의 실제 위치) — 매물 좌표만 다룰 뿐, 사용자 GPS 위치는
+        사용하지 않습니다.</li>
+      <li>쿠키 기반 추적, 광고 식별자, 사용통계(analytics)</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">3.</span>제3자 제공 및 외부 전송</h2>
+    <p>확장 프로그램 개발자가 운영하는 서버는 없으며, 수집된 매물 데이터는 외부로 전송되지 않습니다.
+    다만 아래 한 가지 기능에 한해 <b>카카오(Kakao)</b> 서버와 통신합니다.</p>
+    <div class="box">
+      <p><b>지번 변환(좌표 ↔ 주소, 카카오 로컬 API)</b></p>
+      <p>매물의 위경도 좌표 또는 주소를 <code>dapi.kakao.com</code> 으로 전송해 지번 주소를 받아옵니다.
+      이 통신은 카카오의 API를 그대로 이용하는 것으로, 전송되는 정보는 좌표·주소 문자열뿐이며
+      사용자를 식별할 수 있는 정보는 포함되지 않습니다. 이 과정에는 카카오의 개인정보처리방침이
+      적용됩니다.</p>
+    </div>
+    <p>그 외에는 어떤 정보도 제3자에게 제공·판매·공유하지 않습니다.</p>
+  </section>
+
+  <section>
+    <h2><span class="no">4.</span>내보내기(다운로드) 기능</h2>
+    <p>정리한 표는 사용자의 선택에 따라 CSV, 엑셀(.xls), 지도 연동용 JSON 파일로 <b>사용자의 컴퓨터에만
+    저장</b>됩니다. "복사" 기능도 사용자의 클립보드에만 복사되며, 이 과정에서 어떤 데이터도 외부로
+    전송되지 않습니다.</p>
+  </section>
+
+  <section>
+    <h2><span class="no">5.</span>요청 권한과 사용 목적</h2>
+    <table>
+      <tr><th><code>host_permissions</code></th><td>fin.land.naver.com, new.land.naver.com, disco.re,
+        dapi.kakao.com — 매물 데이터 읽기 및 지번 변환 API 호출에 사용됩니다.</td></tr>
+      <tr><th><code>storage</code></th><td>카카오 API 키를 이 브라우저에 저장하기 위해 사용됩니다.</td></tr>
+      <tr><th><code>clipboardWrite</code></th><td>"복사" 버튼으로 표 내용을 클립보드에 복사하기 위해
+        사용됩니다.</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="no">6.</span>보관 기간 및 삭제</h2>
+    <ul>
+      <li>매물·실거래 데이터: 브라우저 메모리에만 존재 — 새로고침·탭 종료 시 자동 삭제, "초기화" 버튼으로
+        즉시 삭제 가능</li>
+      <li>카카오 API 키: 사용자가 직접 지우거나 확장 프로그램을 제거할 때까지 이 브라우저에 보관</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">7.</span>아동의 개인정보</h2>
+    <p>이 확장 프로그램은 개인 식별정보를 수집하지 않으며, 만 14세 미만 아동을 대상으로 하지 않습니다.</p>
+  </section>
+
+  <section>
+    <h2><span class="no">8.</span>정책 변경</h2>
+    <p>기능이 추가·변경되어 수집 항목이나 처리 방식이 바뀌면 이 문서를 갱신하고, 문서 상단의 시행일을
+    최신 날짜로 표시합니다.</p>
+  </section>
+
+  <section>
+    <h2><span class="no">9.</span>문의처</h2>
+    <p>개발자: 김명국 (<code>mk1017sh@naver.com</code>)</p>
+  </section>
+
+  <footer>
+    이 문서는 네이버부동산·디스코 매물정리 크롬 확장 프로그램(개인 임장 기록용 도구)에 적용됩니다.<br>
+    저장소: github.com/robomecha/naver_desco
+  </footer>
+
+</div>
+</body>
+</html>
