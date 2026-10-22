@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "네이버부동산 매물정리 표",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "네이버페이 부동산(fin.land.naver.com) 매물 목록을 주소·보증금/월세·매매가·평단가·사용승인년도 표로 정리하고 CSV/엑셀로 내보냅니다.",
   "icons": {
     "16": "icons/icon16.png",

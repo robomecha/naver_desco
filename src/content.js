@@ -401,7 +401,567 @@
     if (cno != null) rec.complexNumber = String(cno);
 
     rec.featureDesc = firstOf(ad, ["articleFeatureDescription", "articleFeatureDesc", "atclFetrDesc"]);
+
+    // 매물을 올린 공인중개사 (사무소명 · 대표 · 휴대폰)
+    var br = extractBroker(o);
+    if (br) {
+      // 목록의 중개사 블록엔 대표 대신 제공업체(부동산써브·알터 등) 이름이 섞여 와서 대표는 쓰지 않음.
+      // 대표·휴대폰은 매물을 클릭했을 때 열리는 상세 화면에서 채움(scanBrokerDom).
+      if (br.office) rec.brokerOffice = br.office;
+      if (br.mobile) rec.brokerMobile = br.mobile;
+    }
     return rec;
+  }
+
+  /* ---------- 공인중개사 정보 추출 ---------- */
+  // 숫자열 → 하이픈 전화번호 (엑셀/CSV에서 앞자리 0이 사라지지 않도록 하이픈 형태로 보관)
+  function formatPhone(digits) {
+    if (digits.length === 11) return digits.replace(/^(\d{3})(\d{4})(\d{4})$/, "$1-$2-$3");
+    if (digits.length === 10) return digits.replace(/^(\d{3})(\d{3})(\d{4})$/, "$1-$2-$3");
+    return digits;
+  }
+
+  // 매물 객체 안의 중개사 블록(brokerInfo 등)에서 사무소명·대표·휴대폰을 찾는다.
+  // 필드명이 바뀌어도 견디도록 키 이름 + 값 패턴(휴대폰은 01x 로 시작)으로 판별.
+  var loggedBrokerSample = false;
+  var brokerSamples = []; // 진단용
+  function extractBroker(o) {
+    var src = null;
+    Object.keys(o).forEach(function (k) {
+      if (!src && /broker|realtor|agent|중개/i.test(k) && o[k] && typeof o[k] === "object" && !Array.isArray(o[k])) src = o[k];
+    });
+    if (!src) return null;
+    return extractBrokerBlock(src);
+  }
+  // 중개사 블록(객체) 하나에서 사무소명·대표·휴대폰 추출
+  function extractBrokerBlock(src) {
+    if (!loggedBrokerSample) {
+      loggedBrokerSample = true;
+      try { console.log("[매물정리] 중개사 블록 구조 예시:", JSON.parse(JSON.stringify(src))); } catch (e) {}
+    }
+    // 진단용: 서로 다른 중개사 블록 원본을 몇 개 보관
+    if (brokerSamples.length < 3) {
+      try {
+        var js = JSON.stringify(src);
+        if (js.length < 3000 && brokerSamples.every(function (s) { return JSON.stringify(s) !== js; })) brokerSamples.push(JSON.parse(js));
+      } catch (e) {}
+    }
+
+    var leaves = [];
+    (function walk(node, depth) {
+      if (!node || typeof node !== "object" || depth > 4) return;
+      Object.keys(node).forEach(function (k) {
+        var v = node[k];
+        if (v != null && typeof v === "object") walk(v, depth + 1);
+        else if (v != null && v !== "") leaves.push({ key: String(k).toLowerCase(), val: v });
+      });
+    })(src, 0);
+
+    var skipKey = /phone|tel|mobile|cell|addr|url|photo|image|img|logo|id$|no$|number|date|code/;
+    var office = "", rep = "", mobile = "";
+
+    // 매물 제공업체(부동산써브·부동산포스·매경부동산 등 CP) 이름은 중개사/대표가 아님
+    var cpKey = /cp|provider|source|partner|platform|media|supplier|site/;
+    var cpVal = /^(부동산써브|부동산포스|매경부동산|부동산뱅크|부동산114|한국공인중개사협회|네이버부동산|직방|다방|피터팬)$/;
+    leaves.forEach(function (l) {
+      if (typeof l.val !== "string" || skipKey.test(l.key) || cpKey.test(l.key) || cpVal.test(l.val.trim())) return;
+      var isName = /name|nm|상호|사무소|대표/.test(l.key);
+      if (!isName) return;
+      var isOffice = /office|brokerage|company|agency|realtor|biz|shop|firm|상호|사무소/.test(l.key);
+      var isRep = /ceo|representative|rep|owner|대표|broker|agent|manager|person/.test(l.key);
+      if (isOffice && !office) office = l.val.trim();
+      else if (isRep && !rep) rep = l.val.trim();
+    });
+    // 키가 그냥 name 하나뿐인 경우의 보정
+    if (!office || !rep) {
+      leaves.forEach(function (l) {
+        if (l.key === "name" && typeof l.val === "string" && !cpVal.test(l.val.trim())) {
+          if (!rep && office) rep = l.val.trim();
+          else if (!office) office = l.val.trim();
+        }
+      });
+    }
+
+    // 휴대폰: 01x 로 시작하는 9~11자리. 일반전화(02·031 등)는 수집하지 않음.
+    leaves.forEach(function (l) {
+      if (mobile) return;
+      if (typeof l.val !== "string" && typeof l.val !== "number") return;
+      var d = String(l.val).replace(/\D/g, "");
+      if (/^82(10|1[16789])/.test(d) && d.length >= 11 && d.length <= 13) d = "0" + d.slice(2).replace(/^0+/, ""); // +82 10-… 형식
+      if (d.length >= 10 && d.length <= 11 && /^01[016789]/.test(d)) mobile = formatPhone(d);
+    });
+
+    if (!office && !rep && !mobile) return null;
+    return { office: office, rep: rep, mobile: mobile };
+  }
+
+  // 매물을 클릭하면 열리는 상세 패널의 "중개사" 영역(전화·휴대폰)은 목록이 아니라 상세 응답에 있다.
+  // 그 응답의 요청 주소에 든 articleId 로 어느 매물인지 알아내 해당 매물에 중개사 정보를 붙인다.
+  var brokerSeen = [];   // 진단용: 중개사/휴대폰이 들어 있던 응답들
+  var recentApis = [];   // 진단용: 최근 네이버 API 요청 (클릭 직후 어떤 요청이 오가는지)
+  var activeArticleId = null, activeArticleAt = 0; // 가장 최근에 요청 주소에 나온 (수집된) 매물번호
+  var MOBILE_RE = /01[016789][-\s.]?\d{3,4}[-\s.]?\d{4}/;
+
+  // 문자열 안의 숫자열 중 이미 수집된 매물번호인 것
+  function knownIdIn(str) {
+    var m = String(str || "").match(/\d{8,12}/g) || [];
+    for (var i = 0; i < m.length; i++) if (articles.has(m[i])) return m[i];
+    return null;
+  }
+
+  function absorbBrokerDetail(data, url) {
+    url = url || "";
+    // 요청 주소에 수집된 매물번호가 있으면 "지금 보고 있는 매물"로 기억 (같은 클릭에서 나가는 다른 요청에 쓰임)
+    var urlId = knownIdIn(url);
+    if (urlId) { activeArticleId = urlId; activeArticleAt = Date.now(); }
+
+    var s = "";
+    try { s = JSON.stringify(data) || ""; } catch (e) {}
+    var hasMobile = s.length < 400000 && MOBILE_RE.test(s);
+    var viaUrl = /broker|agent|realtor|agency|중개/i.test(url);
+    if (/front-api|article|broker/i.test(url)) {
+      recentApis.push({ url: url.replace(/[?&]_=\d+/, "").slice(0, 150), hasMobile: hasMobile, knownId: urlId || null });
+      if (recentApis.length > 30) recentApis.shift();
+    }
+    if (!hasMobile && !viaUrl) return false; // 대부분의 응답은 여기서 끝(성능)
+    // 수집된 매물번호가 2개 이상 들어 있으면 상세가 아니라 목록 응답 → 엉뚱한 매물에 붙이지 않음
+    var ids = {}, idCnt = 0;
+    (s.match(/\d{8,12}/g) || []).forEach(function (x) { if (!ids[x] && articles.has(x)) { ids[x] = 1; idCnt++; } });
+    if (idCnt > 1) return false;
+
+    // 어느 매물의 중개사인지: 주소의 번호 → 응답 본문의 매물번호 → 방금(8초 이내) 본 매물 → 열린 매물 페이지
+    var id = urlId;
+    if (!id) {
+      (function walkId(node, depth) {
+        if (id || !node || typeof node !== "object" || depth > 5) return;
+        Object.keys(node).forEach(function (k) {
+          var v = node[k];
+          if (id) return;
+          if (v && typeof v === "object") walkId(v, depth + 1);
+          else if (/article.*(no|id|number)|atcl/i.test(k) && v != null && articles.has(String(v))) id = String(v);
+        });
+      })(data, 0);
+    }
+    // 주소에 (수집 안 된) 다른 매물번호가 명시돼 있으면 그 매물 것이므로 넘겨짚지 않음
+    var otherArticleInUrl = /[?&/](articleId|articleNo|articleNumber|atclNo)[=/]\d+/i.test(url);
+    if (!id && !otherArticleInUrl && activeArticleId && Date.now() - activeArticleAt < 8000) id = activeArticleId;
+    if (!id) { var pid = (location.pathname.match(/articles\/(\d+)/) || [])[1]; if (pid && articles.has(pid)) id = pid; }
+
+    // 중개사 정보가 든 객체 후보: ① broker/realtor/agent 같은 이름의 키 ② 휴대폰 번호가 든 객체와 그 상위 객체
+    var blocks = [];
+    (function walk(node, parents, depth) {
+      if (!node || typeof node !== "object" || depth > 7 || blocks.length >= 6) return;
+      Object.keys(node).forEach(function (k) {
+        var v = node[k];
+        if (v && typeof v === "object") {
+          if (!Array.isArray(v) && /broker|realtor|agent|중개/i.test(k)) blocks.push(v);
+          walk(v, parents.concat([node]), depth + 1);
+        } else if (v != null && typeof v !== "boolean" && MOBILE_RE.test(String(v)) && !Array.isArray(node)) {
+          blocks.push(node);
+          if (parents.length) blocks.push(parents[parents.length - 1]);
+          if (parents.length > 1) blocks.push(parents[parents.length - 2]);
+        }
+      });
+    })(data, [], 0);
+    if (!blocks.length && viaUrl && data && typeof data === "object") {
+      blocks.push(data.result && typeof data.result === "object" ? data.result : data);
+    }
+
+    // 후보들에서 휴대폰·사무소명·대표를 각각 처음 발견된 값으로 합침
+    var best = null;
+    for (var i = 0; i < blocks.length; i++) {
+      var br = extractBrokerBlock(blocks[i]);
+      if (!br) continue;
+      if (!best) best = { office: "", rep: "", mobile: "" };
+      if (!best.mobile && br.mobile) best.mobile = br.mobile;
+      if (!best.office && br.office) best.office = br.office;
+      if (!best.rep && br.rep) best.rep = br.rep;
+    }
+    if (brokerSeen.length < 8) {
+      brokerSeen.push({ url: url.replace(/[?&]_=\d+/, "").slice(0, 160), blocks: blocks.length, mobileFound: !!(best && best.mobile), matchedArticle: id || null });
+    }
+    if (!id || !best) return false;
+    // 상세(클릭) 응답이 더 정확하므로 목록에서 추정한 값을 덮어씀
+    var target = articles.get(id);
+    if (!target) return false;
+    var changed = false;
+    if (best.office && target.brokerOffice !== best.office) { target.brokerOffice = best.office; changed = true; }
+    if (best.rep && target.brokerRep !== best.rep) { target.brokerRep = best.rep; changed = true; }
+    if (best.mobile && target.brokerMobile !== best.mobile) { target.brokerMobile = best.mobile; changed = true; }
+    return changed;
+  }
+
+  /* 화면에 열린 매물 상세의 "중개사" 영역을 직접 읽는다.
+     (API 응답 가로채기로는 잡히지 않아서, 사용자가 보는 그대로의 글자에서 이름·사무소·휴대폰을 추출) */
+  var lastDomBrokerSig = "";
+  function currentArticleIdFromPage() {
+    var href = location.href;
+    var m = href.match(/articles?\/(\d{8,12})/) || href.match(/[?&](?:articleId|articleNo|articleNumber)=(\d{8,12})/);
+    if (m && articles.has(m[1])) return m[1];
+    if (activeArticleId && Date.now() - activeArticleAt < 60000 && articles.has(activeArticleId)) return activeArticleId;
+    return null;
+  }
+  function parseBrokerSection(text) {
+    var lines = String(text || "").split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean);
+    var mob = "";
+    var mm = String(text).match(/01[016789][-\s.]?\d{3,4}[-\s.]?\d{4}/);
+    if (mm) mob = formatPhone(mm[0].replace(/\D/g, ""));
+    var office = "", rep = "";
+    for (var i = 0; i < lines.length; i++) {
+      var l = lines[i];
+      if (!office && /(공인중개사|부동산|중개법인|중개사무소)/.test(l) && l.length <= 40 && !/^중개사$/.test(l) && !/중개\s*보수|매물|협회/.test(l)) {
+        office = l;
+        // 대표 이름은 사무소명 바로 위 줄(2~5자 한글)
+        for (var j = i - 1; j >= 0; j--) {
+          if (/^[가-힣]{2,5}$/.test(lines[j]) && lines[j] !== "중개사") { rep = lines[j]; break; }
+          if (/^중개사$/.test(lines[j])) break;
+        }
+      }
+    }
+    if (!rep) { for (var k = 0; k < lines.length; k++) if (/^[가-힣]{2,5}$/.test(lines[k]) && !/^(중개사|전화|위치|등록번호|상세보기)$/.test(lines[k])) { rep = lines[k]; break; } }
+    return { office: office, rep: rep, mobile: mob };
+  }
+  // 열린 상세 화면의 "중개사" 영역 글자 (없으면 "")
+  function findBrokerSectionText() {
+    if (!document.body) return "";
+    var heads = document.querySelectorAll("h2,h3,h4,strong,div,span,p");
+    for (var i = 0; i < heads.length; i++) {
+      var h = heads[i];
+      if (h.children.length || (h.textContent || "").trim() !== "중개사") continue;
+      if (panel && panel.contains(h)) continue;
+      var box = h.parentElement;
+      for (var up = 0; box && up < 4; up++) {
+        var t = box.innerText || "";
+        if (/01[016789][-\s.]?\d{3,4}[-\s.]?\d{4}/.test(t) || /전화/.test(t)) return t;
+        box = box.parentElement;
+      }
+    }
+    return "";
+  }
+  function scanBrokerDom() {
+    if (IS_DISCO || !document.body) return;
+    var sectionText = findBrokerSectionText();
+    if (!sectionText) return;
+    var br = parseBrokerSection(sectionText);
+    var id = tourIds ? null : currentArticleIdFromPage();
+    var ids = tourIds ? tourIds.slice() : (id ? [id] : []);
+    if (!ids.length && br.office) {
+      // 주소로 매물을 못 정하면: 같은 사무소명을 가진 매물이 하나이거나, 여럿이어도 모두 같은 물건(중복)일 때만
+      var norm = function (s) { return String(s || "").replace(/\s/g, ""); };
+      var hits = [], keys = {};
+      articles.forEach(function (r, k) {
+        if (r.brokerOffice && norm(r.brokerOffice).indexOf(norm(br.office)) >= 0) { hits.push(k); keys[dedupeKey(r) || k] = 1; }
+      });
+      if (hits.length && Object.keys(keys).length === 1) ids = hits;
+    }
+    var sig = ids.join(",") + "|" + sectionText.slice(0, 300);
+    if (sig === lastDomBrokerSig) return;
+    if (brokerSeen.length < 8) brokerSeen.push({ via: "dom", articles: ids, parsed: br, text: sectionText.slice(0, 300) });
+    if (!ids.length || (!br.mobile && !br.rep)) return; // 매물을 특정 못하면 엉뚱하게 붙이지 않음
+    lastDomBrokerSig = sig;
+    var changed = false;
+    ids.forEach(function (k) {
+      var target = articles.get(k);
+      if (!target) return;
+      if (br.office && target.brokerOffice !== br.office) { target.brokerOffice = br.office; changed = true; }
+      if (br.rep && target.brokerRep !== br.rep) { target.brokerRep = br.rep; changed = true; }
+      if (br.mobile && target.brokerMobile !== br.mobile) { target.brokerMobile = br.mobile; changed = true; }
+    });
+    if (changed) scheduleRender();
+  }
+  setInterval(function () { try { scanBrokerDom(); } catch (e) {} }, 1500);
+
+  /* ---------- 자동 순회: 왼쪽 "매물 목록"의 카드를 차례로 클릭해 중개사 정보 수집 ---------- */
+  var tourRunning = false;
+  var tourIds = null; // 자동 순회 중 지금 클릭한 카드에 해당하는 매물번호들
+
+  // 카드 글자(예: "매매 1억 4,000 … 대지1480㎡")와 가격·면적이 맞는 매물 찾기
+  function matchCardToArticles(cardText) {
+    var t = String(cardText || "").replace(/\s/g, "");
+    var hits = [], keys = {};
+    articles.forEach(function (r, k) {
+      var pc = priceCells(r);
+      var price = (pc.deal || pc.deposit || "").replace(/\s/g, "");
+      if (!price || t.indexOf(price) < 0) return;
+      var areas = [r.landArea, r.area2, r.area1].filter(function (a) { return a != null; });
+      var areaOk = !areas.length || areas.some(function (a) {
+        var n = Number(a);
+        return t.indexOf(String(n)) >= 0 || t.indexOf(String(Math.round(n))) >= 0 || t.indexOf(n.toFixed(1)) >= 0;
+      });
+      if (!areaOk) return;
+      hits.push(k); keys[dedupeKey(r) || k] = 1;
+    });
+    return hits.length && Object.keys(keys).length === 1 ? hits : null;
+  }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  // 목록 카드 후보: "매물 목록" 영역 안에서 거래가(매매/전세/월세 + 금액)가 적힌, 너무 크지 않은 요소
+  function findListingCards() {
+    var listRoot = null;
+    var nodes = document.querySelectorAll("h1,h2,h3,strong,div,span,p");
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      if (n.children.length || (n.textContent || "").trim() !== "매물 목록") continue;
+      if (panel && panel.contains(n)) continue;
+      var box = n.parentElement;
+      for (var up = 0; box && up < 6; up++) {
+        if (/(매매|전세|월세|단기임대)\s*[\d]/.test(box.innerText || "") && (box.innerText || "").length > 200) { listRoot = box; break; }
+        box = box.parentElement;
+      }
+      if (listRoot) break;
+    }
+    if (!listRoot) return [];
+    var re = /(매매|전세|월세|단기임대)\s*[\d]/;
+    var cands = Array.prototype.filter.call(listRoot.querySelectorAll("a,li,button,[role='button'],article,div"), function (el) {
+      var t = el.innerText || "";
+      return re.test(t) && t.length > 20 && t.length < 500 && (t.match(/(매매|전세|월세|단기임대)\s*\d/g) || []).length === 1;
+    });
+    // 가장 바깥 카드만 (안쪽 요소 중복 제거)
+    return cands.filter(function (el) {
+      return !cands.some(function (o) { return o !== el && o.contains(el); });
+    });
+  }
+  function findScrollable(el) {
+    while (el && el !== document.body) {
+      var cs = getComputedStyle(el);
+      if (/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 10) return el;
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  /* 클릭 없이: 각 매물의 상세 페이지(/articles/번호)를 뒤에서 받아 중개사 정보를 읽는다.
+     페이지 속 중개사 정보는 화면용 HTML(ArticleRealtorInfo 영역)로 들어 있으므로, HTML을 문서로 읽어
+     그 영역 안의 글자만 사용한다. (영역 밖 숫자 — 예: 사진 파일명 — 를 번호로 오인하지 않도록) */
+  var MOBILE_EXACT = /(^|[^\d])(01[016789])[-\s.]?(\d{3,4})[-\s.]?(\d{4})(?!\d)/;
+  function mobileFromText(t) {
+    var m = String(t || "").match(MOBILE_EXACT);
+    return m ? formatPhone(m[2] + m[3] + m[4]) : "";
+  }
+  // 요소 안의 글자를 줄 단위로 (DOMParser 문서는 innerText 가 없어 직접 모음)
+  function textLines(el) {
+    var out = [];
+    (function walk(n) {
+      if (n.nodeType === 3) { var t = n.nodeValue.trim(); if (t) out.push(t); return; }
+      if (n.nodeType !== 1 || /^(SCRIPT|STYLE|NOSCRIPT)$/.test(n.tagName)) return;
+      for (var c = n.firstChild; c; c = c.nextSibling) walk(c);
+    })(el);
+    return out;
+  }
+  function parseBrokerFromHtml(html) {
+    html = String(html || "");
+    var doc = null;
+    try { doc = new DOMParser().parseFromString(html, "text/html"); } catch (e) {}
+    if (doc) {
+      // 중개사 영역: 클래스에 ArticleRealtorInfo 가 들어간 요소 중 가장 바깥
+      var els = doc.querySelectorAll('[class*="ArticleRealtorInfo"], [class*="RealtorInfo"], [class*="realtorInfo"]');
+      var root = null;
+      for (var i = 0; i < els.length; i++) {
+        var el = els[i], inner = false;
+        for (var p = el.parentElement; p; p = p.parentElement) {
+          if (/RealtorInfo|realtorInfo/.test(p.getAttribute("class") || "")) { inner = true; break; }
+        }
+        if (!inner) { root = el; break; }
+      }
+      if (root) {
+        var lines = textLines(root);
+        var text = lines.join("\n");
+        // 휴대폰: 전화 버튼(ret.call…)들 중 01x 번호, 없으면 영역 글자에서
+        var mobile = "";
+        var tels = root.querySelectorAll('[data-nlogs-area^="ret.call"], a[href^="tel:"], button');
+        for (var k = 0; k < tels.length && !mobile; k++) mobile = mobileFromText(tels[k].textContent || tels[k].getAttribute("href") || "");
+        if (!mobile) mobile = mobileFromText(text);
+        var br = parseBrokerSection("중개사\n" + text);
+        return { mobile: mobile, rep: br.rep, office: br.office, repKey: "(realtor-html)",
+          around: text.slice(0, 300) };
+      }
+    }
+    // 영역을 못 찾은 경우: 번호만 엄격하게(앞뒤가 숫자가 아닌 것) — 이름은 추측하지 않음
+    var mob = mobileFromText(html.replace(/<[^>]+>/g, " "));
+    if (!mob) return null;
+    return { mobile: "", rep: "", office: "", repKey: "(no-realtor-section)", around: "" };
+  }
+  var brokerFetchLog = []; // 진단용
+  async function fetchBrokerForArticle(id) {
+    var res = await fetch(location.origin + "/articles/" + id, { credentials: "include" });
+    if (!res.ok) { brokerFetchLog.push({ id: id, status: res.status }); return null; }
+    var html = await res.text();
+    var br = parseBrokerFromHtml(html);
+    if (brokerFetchLog.length < 10) brokerFetchLog.push({ id: id, status: res.status, len: html.length, found: br });
+    return br;
+  }
+  // 반환: 번호를 채운 매물 수 (이 방식이 안 통하면 -1)
+  async function prefetchBrokers(btn) {
+    if (!IS_FIN) return -1;
+    var targets = [];
+    // 지금 표에 보이는 매물만 (다른 지역·숨긴 매물은 제외)
+    // 이전에 잘못 들어간 값도 바로잡도록 매번 전부 다시 가져와 덮어씀
+    toRows().forEach(function (r) { if (/^\d{8,12}$/.test(r.articleNo)) targets.push(r.articleNo); });
+    var got = 0, tried = 0;
+    for (var i = 0; i < targets.length && tourRunning; i++) {
+      tried++;
+      btn.textContent = "■ 멈춤 (가져오는 중 " + tried + "/" + targets.length + " · 번호 " + got + ")";
+      var br = null;
+      try { br = await fetchBrokerForArticle(targets[i]); } catch (e) {}
+      var rec = articles.get(targets[i]);
+      if (br && rec) {
+        if (br.mobile || br.rep) got++;
+        if (br.repKey === "(realtor-html)") {
+          // 중개사 영역을 정확히 읽었으면 그대로 덮어씀 (예전에 잘못 들어간 값 제거)
+          rec.brokerMobile = br.mobile || undefined;
+          rec.brokerRep = br.rep || undefined;
+        } else {
+          if (br.mobile) rec.brokerMobile = br.mobile;
+          if (br.rep) rec.brokerRep = br.rep;
+        }
+        if (br.office && !rec.brokerOffice) rec.brokerOffice = br.office;
+        scheduleRender();
+      }
+      // 처음 3건에서 하나도 못 찾으면 이 방식은 안 통하는 것 → 클릭 순회로 넘어감
+      if (tried === 3 && got === 0) return -1;
+      await sleep(500 + Math.random() * 400);
+    }
+    return got;
+  }
+
+  async function runBrokerTour(btn) {
+    if (tourRunning) { tourRunning = false; return; } // 다시 누르면 멈춤
+    tourRunning = true;
+    var label0 = btn.textContent;
+    var pre = -1;
+    try { pre = await prefetchBrokers(btn); } catch (e) { pre = -1; }
+    if (pre >= 0 || !tourRunning) {
+      tourRunning = false;
+      btn.textContent = label0;
+      render();
+      flash(btn, pre >= 0 ? "휴대폰 " + pre + "건 채움" : "멈춤");
+      return;
+    }
+    tourRunning = false;
+    btn.textContent = label0;
+    // 뒤에서 받아오기가 안 되면 → 목록 카드를 대신 클릭하는 방식
+    var cards = findListingCards();
+    if (!cards.length) {
+      flash(btn, "왼쪽 '매물 목록'을 먼저 열어주세요");
+      return;
+    }
+    tourRunning = true;
+    var done = {}, count = 0, got = 0, idleRounds = 0;
+    var label = btn.textContent;
+    try {
+      while (tourRunning && count < 200) {
+        cards = findListingCards();
+        var next = null;
+        for (var i = 0; i < cards.length; i++) {
+          var key = (cards[i].innerText || "").replace(/\s+/g, " ").slice(0, 160);
+          if (!done[key]) { done[key] = 1; next = cards[i]; break; }
+        }
+        if (!next) {
+          // 목록 끝까지 내려 더 불러오기 시도, 두 번 연속 새 카드 없으면 종료
+          var sc = findScrollable(cards[cards.length - 1] || document.body);
+          if (sc) sc.scrollTop = sc.scrollHeight;
+          await sleep(1500);
+          if (++idleRounds >= 2) break;
+          continue;
+        }
+        idleRounds = 0;
+        count++;
+        btn.textContent = "■ 멈춤 (" + count + "건 · 번호 " + got + ")";
+        var before = findBrokerSectionText();
+        try { next.scrollIntoView({ block: "center" }); } catch (e) {}
+        next.click();
+        // 중개사 영역이 새 매물 것으로 바뀔 때까지 최대 5초 대기
+        var waited = 0, text = "";
+        while (tourRunning && waited < 5000) {
+          await sleep(300); waited += 300;
+          text = findBrokerSectionText();
+          if (text && text !== before) break;
+        }
+        await sleep(400); // 화면이 다 그려지도록 잠깐 더
+        // 화면이 새 매물로 바뀐 게 확인됐을 때만, 클릭한 카드의 매물에 연결 (바뀌지 않았으면 이전 매물 정보라 건너뜀)
+        text = findBrokerSectionText();
+        var shownOffice = parseBrokerSection(text).office.replace(/\s/g, "");
+        var cardTxt = (next.innerText || "").replace(/\s/g, "");
+        if (text && (text !== before || (shownOffice && cardTxt.indexOf(shownOffice) >= 0))) {
+          tourIds = matchCardToArticles(next.innerText || "");
+          try { scanBrokerDom(); } finally { tourIds = null; }
+        }
+        if (/01[016789][-\s.]?\d{3,4}[-\s.]?\d{4}/.test(findBrokerSectionText())) got++;
+        await sleep(700 + Math.random() * 600); // 너무 빠른 반복 클릭 방지
+      }
+    } finally {
+      tourRunning = false;
+      btn.textContent = label;
+      render();
+      flash(btn, count + "건 순회 완료");
+    }
+  }
+
+  // 레코드 하나의 중개사 정보를 [ {office, rep, mobile} ] 형태로
+  function brokerEntries(rec) {
+    if (!rec.brokerOffice && !rec.brokerRep && !rec.brokerMobile) return [];
+    return [{ office: rec.brokerOffice || "", rep: rec.brokerRep || "", mobile: rec.brokerMobile || "" }];
+  }
+  // 두 목록을 합치되 같은 중개사(사무소·대표·휴대폰 동일)는 한 번만
+  function mergeBrokerLists(a, b) {
+    var out = (a || []).slice(), seen = {};
+    out.forEach(function (e) { seen[e.office + "|" + e.rep + "|" + e.mobile] = 1; });
+    (b || []).forEach(function (e) {
+      var k = e.office + "|" + e.rep + "|" + e.mobile;
+      if (!seen[k]) { seen[k] = 1; out.push(e); }
+    });
+    return out;
+  }
+  // 사무소명 줄이기: "강화서희부동산공인중개사사무소" → "강화서희부동산공인"
+  function shortOffice(s) {
+    // 화면에서 두 줄로 나뉘어 "…공인중개사"까지만 잡힌 경우도 같게 줄임
+    return String(s || "").replace(/\s*중개사(\s*사무소)?\s*$/, "").trim();
+  }
+  // 표시용: 여러 중개사면 " / " 로 이어 붙임 (같은 이름은 한 번만)
+  function joinBroker(list, field) {
+    var seen = {};
+    return (list || []).map(function (e) { return field === "office" ? shortOffice(e.office) : e[field]; })
+      .filter(function (v) { if (!v || seen[v]) return false; seen[v] = 1; return true; }).join(" / ");
+  }
+
+  /* ---------- 연락처(.vcf) 내보내기 ---------- */
+  // 지금 표에 있는 매물의 중개사 중 휴대폰 번호가 있는 사람만, 번호 기준 중복 없이
+  function brokerContacts() {
+    var seen = {}, out = [];
+    toRows().forEach(function (rec) {
+      (rec._brokers || brokerEntries(rec)).forEach(function (e) {
+        if (!e.mobile || seen[e.mobile]) return;
+        seen[e.mobile] = 1;
+        out.push(e);
+      });
+    });
+    return out;
+  }
+  function vcfEscape(s) {
+    return String(s == null ? "" : s).replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/;/g, "\\;").replace(/,/g, "\\,");
+  }
+  // 이름 = "지역명 대표명" (지역명으로 검색할 수 있게 앞에 붙임). 사무소명은 회사(ORG) 칸에 저장.
+  function buildContactsVcf(region) {
+    region = (region || "").trim();
+    var lines = [];
+    brokerContacts().forEach(function (e) {
+      // 이름 = 지역명 + 사무소명(줄임) + 대표, 띄어쓰기 없이 (예: "강화강화에이스공인정철우")
+      var name = [region, shortOffice(e.office), e.rep].filter(Boolean).join("").replace(/\s+/g, "");
+      lines.push("BEGIN:VCARD", "VERSION:3.0",
+        "N:" + vcfEscape(name) + ";;;;",
+        "FN:" + vcfEscape(name));
+      if (e.office) lines.push("ORG:" + vcfEscape(shortOffice(e.office)));
+      lines.push("TEL;TYPE=CELL:" + e.mobile,
+        "NOTE:" + vcfEscape("공인중개사" + (e.office && e.rep ? " · " + e.office : "") + (region ? " · " + region : "")),
+        "END:VCARD");
+    });
+    return lines.join("\r\n") + (lines.length ? "\r\n" : "");
+  }
+  // 입력창 기본 지역명: 표에서 가장 많은 지역의 시·군·구 이름 ("경기도 시흥시" → "시흥")
+  function defaultRegionName() {
+    var toks = String(dominantRegion || "").trim().split(/\s+/);
+    var t = toks[1] || toks[0] || "";
+    return t.length > 2 ? t.replace(/[시군구]$/, "") : t;
   }
 
   /* 단지(complex) 정보 저장: 사용승인일·주소 보강용 */
@@ -451,10 +1011,42 @@
     else if (complexHasJibun && needsJibun(rec)) rec.address = c.address;
   }
 
+  /* 초기화/삭제한 매물의 '내용 지문'.
+     매물번호(ID)만 막으면, 같은 호실을 다른 중개사가 따로 올린 매물(ID 다름)이 초기화 뒤에
+     뒤늦게 로드될 때 다시 쌓인다(상가·지식산업센터·업무시설에서 특히 흔함). 그래서 ID와 별개로
+     종류·거래·가격·면적·층·동네가 같은 매물도 막는다. */
+  var dismissedFp = new Set();
+
+  function listingFp(rec) {
+    var hasAmt = rec.dealManwon != null || rec.depositManwon != null || rec.rentManwon != null;
+    var hasArea = rec.area1 != null || rec.area2 != null || rec.landArea != null;
+    if (!hasAmt || !hasArea) return null; // 근거가 부족하면 지문을 만들지 않음(엉뚱한 매물 차단 방지)
+    // 동네: 시군구 + 동(읍·면·리·가). 지번이 붙거나 도 이름이 바뀌어도(전북도→전북특별자치도) 같게 유지
+    var toks = String(rec.address || "").trim().split(/\s+/);
+    var dong = "";
+    for (var i = 2; i < toks.length; i++) { if (/[동가리읍면]$/.test(toks[i]) && !/^\d/.test(toks[i])) { dong = toks[i]; break; } }
+    var place = (toks[1] || "") + "/" + dong;
+    return [
+      rec.realEstateType || rec.realEstateTypeName || "", rec.tradeTypeName || rec.tradeType || "",
+      rec.dealManwon == null ? "" : rec.dealManwon, rec.depositManwon == null ? "" : rec.depositManwon,
+      rec.rentManwon == null ? "" : rec.rentManwon,
+      rec.area1 == null ? "" : rec.area1, rec.area2 == null ? "" : rec.area2, rec.landArea == null ? "" : rec.landArea,
+      normTxt(rec.floor), place
+    ].join("|");
+  }
+  function dismissRecord(rec, key) {
+    dismissed.add(key);
+    if (!IS_DISCO) { var fp = listingFp(rec); if (fp) dismissedFp.add(fp); }
+  }
+
   function mergeRecord(rec) {
     if (!rec || !rec.articleNo) return false;
     if (dismissed.has(rec.articleNo)) return false; // 초기화로 지운 매물은 다시 담지 않음
     var existing = articles.get(rec.articleNo);
+    if (!existing && !IS_DISCO) {
+      var fp = listingFp(rec);
+      if (fp && dismissedFp.has(fp)) return false;  // 같은 내용의 매물(다른 번호)도 다시 담지 않음
+    }
     if (!existing) {
       articles.set(rec.articleNo, rec);
       return true;
@@ -602,6 +1194,8 @@
     // 패널을 늦게 열더라도 그 사이의 클릭을 놓치지 않도록 이 게이트를 적용하지 않는다.
     if (!collectionEnabled && !IS_DISCO) return;
     if (IS_DISCO) { handleDiscoData(data, url); return; }
+    // 매물 상세(클릭 시) 응답의 중개사 연락처를 해당 매물에 연결
+    try { if (absorbBrokerDetail(data, url)) scheduleRender(); } catch (e) {}
     var found = [];
     collectArticles(data, found);
     if (found.length && !window.__nreLoggedSample) {
@@ -757,6 +1351,33 @@
   // 직전에 클릭한 필지/건물(short_info)의 정보 — 개별 실거래내역 클릭 시 주소·용도지역 등을 채우는 데 씀
   var lastDiscoContext = null;
 
+  // 필지 클릭(short_info)과 실거래내역 클릭(real_price_detail/table)이 같은 거래를 서로 다른 키로
+  // 각각 저장해 완전히 동일한 내용이 두 줄로 쌓이는 것을 방지: 주소+거래일+금액이 같으면 새 줄을
+  // 만들지 않고 기존 줄에 정보만 보강한다.
+  var discoContentIndex = new Map(); // "주소|거래일|매매|보증금|월세" -> articleNo
+  function discoContentKey(rec) {
+    if (!rec.address || !rec.confirmYmd) return null; // 식별 근거 부족하면 중복판정 안 함(그냥 개별 저장)
+    return [rec.address, rec.confirmYmd, rec.dealManwon || "", rec.depositManwon || "", rec.rentManwon || ""].join("|");
+  }
+  function mergeDiscoRecord(rec) {
+    var key = discoContentKey(rec);
+    if (key != null && discoContentIndex.has(key)) {
+      var existingNo = discoContentIndex.get(key);
+      var existing = articles.get(existingNo);
+      if (existing) {
+        // 더 구체적인 정보(층 등)가 있으면 기존 줄을 보강만 하고, 새 줄은 만들지 않음
+        var changed = false;
+        ["floor", "area2", "landArea", "floorArea", "useApproveYmd", "lat", "lng", "name"].forEach(function (f) {
+          if ((existing[f] == null || existing[f] === "") && rec[f] != null && rec[f] !== "") { existing[f] = rec[f]; changed = true; }
+        });
+        return changed;
+      }
+    }
+    var added = mergeRecord(rec);
+    if (added && key != null) discoContentIndex.set(key, rec.articleNo);
+    return added;
+  }
+
   // 실거래내역 한 건(real_price_detail 또는 real_price_table 의 행)을 표준 레코드로.
   // 이 응답들엔 주소·용도지역이 없어서, 직전 클릭한 필지(lastDiscoContext)의 정보를 함께 사용.
   function buildDiscoDealRecord(row, ctx, no) {
@@ -787,24 +1408,28 @@
     return rec;
   }
 
+  // 진단용: short_info/real_price_detail/real_price_table 응답만 최근 순으로 기록.
+  // (로그인·지도로딩 등 잡음 요청은 discoDump 에 안 담아 진단이 소음에 묻히지 않게 함)
+  var DISCO_DIAG_MAX = 12;
+  function pushDiscoDiag(tag, url, data) {
+    var samp = {};
+    Object.keys(data || {}).slice(0, 40).forEach(function (k) { samp[k] = trimVal(data[k]); });
+    discoDump.push({ tag: tag, url: url.replace(/[?&]_=\d+/, "").slice(0, 200), keys: Object.keys(data || {}), sample: samp });
+    if (discoDump.length > DISCO_DIAG_MAX) discoDump.shift(); // 오래된 것부터 버리고 최신 유지
+  }
+
   function handleDiscoData(data, url) {
     url = url || "";
     if (!data || typeof data !== "object") return;
 
-    // 진단용: 디스코 응답을 URL과 함께 기록
-    if (discoDump.length < 10) {
-      var samp = {};
-      Object.keys(data).slice(0, 40).forEach(function (k) { samp[k] = trimVal(data[k]); });
-      discoDump.push({ url: url.replace(/[?&]_=\d+/, "").slice(0, 180), keys: Object.keys(data), sample: samp });
-    }
-
     // 1) 클릭한 필지/건물 = short_info (용도지역·지목·실거래가 등). 이후 실거래내역 클릭의 컨텍스트로도 씀.
     if (/\/short_info\//.test(url) && data.address) {
+      pushDiscoDiag("short_info", url, data);
       var pnu = (url.match(/[?&]p=([^&]+)/) || [])[1] || "";
       var rec = normalizeDiscoShort(data, pnu);
       lastDiscoContext = rec;
       if (!window.__nreLoggedSample) { window.__nreLoggedSample = true; try { console.log("[실거래] short_info:", data); } catch (e) {} }
-      if (rec && mergeRecord(rec)) {
+      if (rec && mergeDiscoRecord(rec)) {
         scheduleRender();
         try { enqueueAddrGeocode(); } catch (e) {} // 지도 내보내기용 좌표 채우기
       }
@@ -813,10 +1438,11 @@
 
     // 2) "실거래" 탭에서 개별 실거래내역 항목을 클릭하면 호출됨 (요청하신 "클릭할 때마다 수집"의 핵심)
     if (/\/real_price_detail\//.test(url)) {
+      pushDiscoDiag("real_price_detail", url, data);
       var no = (url.match(/[?&]no=([^&]+)/) || [])[1];
       if (no && data && typeof data === "object" && Object.keys(data).length) {
         var dealRec = buildDiscoDealRecord(data, lastDiscoContext, no);
-        if (mergeRecord(dealRec)) {
+        if (mergeDiscoRecord(dealRec)) {
           scheduleRender();
           try { enqueueAddrGeocode(); } catch (e) {}
         }
@@ -825,16 +1451,19 @@
     }
 
     // 3) 실거래내역 목록(여러 건이 한 번에 오는 경우)도 같은 방식으로 수집
-    if (/\/real_price_table\//.test(url) && data && Array.isArray(data.real_price)) {
-      var any3 = false;
-      for (var i = 0; i < data.real_price.length; i++) {
-        var row = data.real_price[i];
-        if (!row || row.no == null) continue;
-        if (mergeRecord(buildDiscoDealRecord(row, lastDiscoContext, row.no))) any3 = true;
-      }
-      if (any3) {
-        scheduleRender();
-        try { enqueueAddrGeocode(); } catch (e) {}
+    if (/\/real_price_table\//.test(url)) {
+      pushDiscoDiag("real_price_table", url, data);
+      if (data && Array.isArray(data.real_price)) {
+        var any3 = false;
+        for (var i = 0; i < data.real_price.length; i++) {
+          var row = data.real_price[i];
+          if (!row || row.no == null) continue;
+          if (mergeDiscoRecord(buildDiscoDealRecord(row, lastDiscoContext, row.no))) any3 = true;
+        }
+        if (any3) {
+          scheduleRender();
+          try { enqueueAddrGeocode(); } catch (e) {}
+        }
       }
       return;
     }
@@ -1319,7 +1948,10 @@
   var tradeSort = "";    // "" | "매매" | "전세" | "월세"  → 해당 거래유형을 위로
   var floorSort = "";    // "" | "asc"(1층순) | "desc"(상층순)
   var approvalSort = ""; // "" | "new"(신축순=년차 적은순) | "old"(구축순=년차 많은순)
+  var priceSort = "";    // "" | "low"(단가 낮은순) | "high"(단가 높은순)
   var lastOrder = "floor"; // 층·년차 둘 다 켜졌을 때 어느 쪽을 우선할지(가장 최근에 누른 것)
+  var orderStack = ["floor", "approval", "price"]; // 층·년차·단가 중 최근에 누른 순서(앞이 우선)
+  function bumpOrder(k) { orderStack = [k].concat(orderStack.filter(function (x) { return x !== k; })); lastOrder = k; }
 
   // 사용승인 경과년차(숫자). elapsedYear 우선, 없으면 연도로 계산. 불명은 null.
   function approvalYears(rec) {
@@ -1373,10 +2005,27 @@
     return 0;
   }
 
+  // 단가: 매매·전세는 평단가(만원/평), 월세는 평당월세(만원/평·월).
+  // 단위가 달라 서로 섞어 비교하지 않고, 같은 종류끼리만 비교한다. (평단가 묶음 → 평당월세 묶음 → 단가 없음)
+  function unitPriceKind(rec) {
+    var v = rec.discoPyeong != null ? rec.discoPyeong : pyeongPrice(rec);
+    if (v != null && !isNaN(v)) return { kind: 0, v: Number(v) };
+    var r = pyeongRent(rec);
+    if (r != null && !isNaN(r)) return { kind: 1, v: Number(r) };
+    return { kind: 2, v: 0 };
+  }
+  function cmpPrice(a, b) {
+    if (!priceSort) return 0;
+    var pa = unitPriceKind(a), pb = unitPriceKind(b);
+    if (pa.kind !== pb.kind) return pa.kind - pb.kind;
+    if (pa.kind === 2 || pa.v === pb.v) return 0;
+    return priceSort === "low" ? pa.v - pb.v : pb.v - pa.v;
+  }
+
   function applySort(rows) {
-    // 층·년차 중 가장 최근에 누른 쪽을 우선 적용
-    var first = lastOrder === "approval" ? cmpApproval : cmpFloor;
-    var second = lastOrder === "approval" ? cmpFloor : cmpApproval;
+    // 층·년차·단가 중 가장 최근에 누른 쪽을 우선 적용
+    var cmps = { floor: cmpFloor, approval: cmpApproval, price: cmpPrice };
+    var order = orderStack.map(function (k) { return cmps[k]; });
     rows.sort(function (a, b) {
       // 1순위: 거래유형 (선택 시 해당 유형을 위로 묶음)
       if (tradeSort) {
@@ -1385,8 +2034,7 @@
         if (am !== bm) return am - bm;
       }
       // 2·3순위: 층/년차 (최근에 누른 쪽 우선)
-      var r = first(a, b); if (r) return r;
-      r = second(a, b); if (r) return r;
+      for (var oi = 0; oi < order.length; oi++) { var r = order[oi](a, b); if (r) return r; }
       // 마지막: 확인일 최신순
       return confirmCmp(a, b);
     });
@@ -1475,6 +2123,7 @@
     hiddenIncompleteCount = 0;
     articles.forEach(function (rec) {
       rec._dup = 1;
+      rec._brokers = brokerEntries(rec);
       if (hideIncomplete && !isRealListing(rec)) { hiddenIncompleteCount++; return; }
       all.push(rec);
     });
@@ -1495,14 +2144,17 @@
           rows.push(r);
         } else {
           var n = (g._dup || 1) + 1;
+          var pooled = mergeBrokerLists(g._brokers, r._brokers); // 같은 물건을 올린 중개사 모두 보존
           if (completeness(r) > completeness(g)) {
             // 더 충실한 쪽을 대표로 교체
             var idx = rows.indexOf(g);
             r._dup = n;
+            r._brokers = pooled;
             if (idx >= 0) rows[idx] = r;
             groups.set(k, r);
           } else {
             g._dup = n;
+            g._brokers = pooled;
           }
         }
       }
@@ -1575,7 +2227,10 @@
     { key: "area", label: "면적(㎡/평)" },
     { key: "useYear", label: "사용승인(년차)" },
     { key: "floor", label: "층" },
-    { key: "name", label: "단지/건물" }
+    { key: "name", label: "단지/건물" },
+    { key: "brokerOffice", label: "중개사무소" },
+    { key: "brokerRep", label: "대표" },
+    { key: "brokerMobile", label: "휴대폰" }
   ];
 
   function rowValues(rec) {
@@ -1603,6 +2258,10 @@
       landAreaTxt: (!rec.ziphap && rec.landArea) ? areaOne(rec.landArea) : "",
       buildingAreaTxt: rec.ziphap ? (rec.area2 ? areaOne(rec.area2) : "") : (rec.floorArea ? areaOne(rec.floorArea) : ""),
       dup: rec._dup > 1 ? rec._dup + "건" : "",
+      // 공인중개사: 같은 물건을 여러 곳이 올렸으면 " / " 로 함께 표시
+      brokerOffice: joinBroker(rec._brokers || brokerEntries(rec), "office"),
+      brokerRep: joinBroker(rec._brokers || brokerEntries(rec), "rep"),
+      brokerMobile: joinBroker(rec._brokers || brokerEntries(rec), "mobile"),
       articleNo: rec.articleNo
     };
   }
@@ -1719,11 +2378,17 @@
             '<span class="nre-sort-sep"></span>' +
             '<button class="nre-sbtn" data-sort="appr:new">신축순</button>' +
             '<button class="nre-sbtn" data-sort="appr:old">구축순</button>' +
+            '<span class="nre-sort-sep"></span>' +
+            '<button class="nre-sbtn" data-sort="price:low" title="단가 낮은 매물부터 (매매·전세=평단가, 월세=평당월세)">저단가순</button>' +
+            '<button class="nre-sbtn" data-sort="price:high" title="단가 높은 매물부터 (매매·전세=평단가, 월세=평당월세)">고단가순</button>' +
           '</span>' +
           '<button id="nre-csv" class="nre-btn">CSV</button>' +
           '<button id="nre-xls" class="nre-btn">엑셀</button>' +
           '<button id="nre-map" class="nre-btn" title="필지 맵핑 도구에서 바로 불러올 수 있는 좌표 포함 JSON으로 내보냅니다">🗺 지도</button>' +
           '<button id="nre-copy" class="nre-btn">복사</button>' +
+          (IS_DISCO ? '' : '<button id="nre-vcf" class="nre-btn nre-btn-primary" title="수집한 공인중개사 휴대폰 번호를 연락처 파일(.vcf)로 저장합니다. 이름 앞에 지역명이 붙습니다.">👥 연락처</button>') +
+          (IS_DISCO ? '' : '<button id="nre-tour" class="nre-btn nre-btn-primary" title="왼쪽 매물 목록의 카드를 차례로 대신 클릭해 중개사 대표·휴대폰을 채웁니다. 다시 누르면 멈춥니다.">▶ 중개사 자동수집</button>') +
+          (IS_DISCO ? '' : '<button id="nre-brokerdbg" class="nre-btn" title="중개사 휴대폰이 안 들어올 때 원인 확인용 — 결과를 클립보드에 복사합니다">🐞 중개사진단</button>') +
           (IS_DISCO ? '<button id="nre-discodbg" class="nre-btn">🐞 진단복사</button>' : '') +
           '<button id="nre-clear" class="nre-btn">초기화</button>' +
         '</div>' +
@@ -1745,6 +2410,14 @@
     tbodyEl = panel.querySelector("tbody");
     tbodyEl.addEventListener("click", function (ev) {
       var t = ev.target;
+      if (t && t.classList && t.classList.contains("nre-cpn")) {
+        ev.preventDefault();
+        var tel = t.getAttribute("data-tel") || "";
+        var done = function () { var old = t.textContent; t.textContent = "✔복사됨"; setTimeout(function () { t.textContent = old; }, 1200); };
+        try { navigator.clipboard.writeText(tel).then(done, function () { fallbackCopy(tel, t); }); }
+        catch (e) { fallbackCopy(tel, t); } // fallbackCopy 가 자체적으로 "복사됨!" 표시
+        return;
+      }
       if (t && t.classList && t.classList.contains("nre-del")) {
         ev.preventDefault();
         var no = t.getAttribute("data-no");
@@ -1754,7 +2427,7 @@
           var key = target ? dedupeKey(target) : null;
           articles.forEach(function (rec, k) {
             if (k === no || (dedupeOn && key != null && dedupeKey(rec) === key)) {
-              dismissed.add(k);
+              dismissRecord(rec, k);
               articles.delete(k);
             }
           });
@@ -1767,8 +2440,9 @@
     makePanelDraggable(panel, panel.querySelector("#nre-head"));
     panel.querySelector("#nre-clear").addEventListener("click", function () {
       if (!confirm("표에 모인 매물을 모두 지울까요?\n\n지운 매물은 자동 재스캔으로 다시 담기지 않습니다.\n처음부터 다시 모으려면 페이지를 새로고침(F5)하세요.")) return;
-      articles.forEach(function (_v, k) { dismissed.add(k); });
+      articles.forEach(function (rec, k) { dismissRecord(rec, k); });
       articles.clear();
+      discoContentIndex.clear(); // 초기화 후 재수집 시 예전 인덱스로 잘못 병합되지 않도록
       render();
     });
     panel.querySelector("#nre-autogeo").addEventListener("change", function () {
@@ -1785,17 +2459,38 @@
       } else if (s.indexOf("floor:") === 0) {
         var fv = s.slice(6);
         floorSort = (floorSort === fv) ? "" : fv; // 층 세트: 독립적으로 토글
-        if (floorSort) lastOrder = "floor";       // 방금 누른 쪽을 우선
+        if (floorSort) bumpOrder("floor");        // 방금 누른 쪽을 우선
       } else if (s.indexOf("appr:") === 0) {
         var av = s.slice(5);
         approvalSort = (approvalSort === av) ? "" : av; // 년차 세트: 독립적으로 토글
-        if (approvalSort) lastOrder = "approval";       // 방금 누른 쪽을 우선
+        if (approvalSort) bumpOrder("approval");        // 방금 누른 쪽을 우선
+      } else if (s.indexOf("price:") === 0) {
+        var pv = s.slice(6);
+        priceSort = (priceSort === pv) ? "" : pv;      // 단가 세트: 독립적으로 토글
+        if (priceSort) bumpOrder("price");
       }
       render();
     });
     var discoDbgBtn = panel.querySelector("#nre-discodbg");
     if (discoDbgBtn) discoDbgBtn.addEventListener("click", function () {
-      var report = { url: location.href, capturedResponses: stats.resp, collected: articles.size, discoResponses: discoDump };
+      var landSamples = [];
+      articles.forEach(function (rec) {
+        if (landSamples.length >= 10) return;
+        if (rec.realEstateTypeName === "토지" || rec.jimok) {
+          landSamples.push({
+            articleNo: rec.articleNo, address: rec.address, name: rec.name,
+            realEstateTypeName: rec.realEstateTypeName, useDistrict: rec.useDistrict, jimok: rec.jimok,
+            dealManwon: rec.dealManwon, depositManwon: rec.depositManwon, rentManwon: rec.rentManwon,
+            tradeTypeName: rec.tradeTypeName, confirmYmd: rec.confirmYmd,
+            landArea: rec.landArea, area2: rec.area2, discoPyeong: rec.discoPyeong
+          });
+        }
+      });
+      var report = {
+        url: location.href, capturedResponses: stats.resp, collected: articles.size,
+        landCollected: landSamples.length, landSamples: landSamples,
+        discoResponses: discoDump
+      };
       var text = JSON.stringify(report, null, 2);
       console.log("[실거래] 디스코 진단:", report);
       var b = this;
@@ -1803,6 +2498,12 @@
         navigator.clipboard.writeText(text).then(function () { flash(b, "복사됨! 붙여넣어 주세요"); }, function () { fallbackCopy(text, b); });
       } catch (e) { fallbackCopy(text, b); }
     });
+    var vcfBtn = panel.querySelector("#nre-vcf");
+    if (vcfBtn) vcfBtn.addEventListener("click", function () { exportContacts(this); });
+    var tourBtn = panel.querySelector("#nre-tour");
+    if (tourBtn) tourBtn.addEventListener("click", function () { runBrokerTour(this); });
+    var brokerDbgBtn = panel.querySelector("#nre-brokerdbg");
+    if (brokerDbgBtn) brokerDbgBtn.addEventListener("click", function () { brokerDiagnose(this); });
     panel.querySelector("#nre-csv").addEventListener("click", exportCSV);
     panel.querySelector("#nre-xls").addEventListener("click", exportXLS);
     panel.querySelector("#nre-map").addEventListener("click", function () { exportMapJSON(panel.querySelector("#nre-map")); });
@@ -1845,7 +2546,8 @@
         var s = sbtns[b].getAttribute("data-sort");
         var on = (tradeSort && s === "trade:" + tradeSort) ||
           (floorSort && s === "floor:" + floorSort) ||
-          (approvalSort && s === "appr:" + approvalSort);
+          (approvalSort && s === "appr:" + approvalSort) ||
+          (priceSort && s === "price:" + priceSort);
         sbtns[b].classList.toggle("active", !!on);
       }
     }
@@ -1870,7 +2572,12 @@
         var val = v[COLUMNS[c].key] || "";
         html += "<td>" + escapeHtml(val) + "</td>";
       }
-      html += "<td class='nre-actcell'>" + mapLink + viewLink +
+      // 휴대폰 번호가 있으면 번호 복사 버튼(여러 중개사면 줄바꿈으로 모두 복사) — 카톡 '연락처로 친구 추가'에 붙여넣기용
+      var telList = (rec._brokers || brokerEntries(rec)).map(function (e) { return e.mobile; }).filter(Boolean);
+      var telBtn = telList.length
+        ? "<a href='#' class='nre-cpn' data-tel='" + escapeHtml(telList.join("\n")) + "' title='휴대폰 번호 복사: " + escapeHtml(telList.join(", ")) + "'>📞복사</a> "
+        : "";
+      html += "<td class='nre-actcell'>" + telBtn + mapLink + viewLink +
         "<a href='#' class='nre-del' data-no='" + escapeHtml(v.articleNo) + "' title='이 항목 삭제'>✕</a></td>";
       html += "</tr>";
     }
@@ -1939,7 +2646,7 @@
   // "1/5", "3/4" 같은 층 표기를 엑셀이 날짜(5월 1일 등)로 잘못 인식해 셀이 깨지는 문제 방지.
   // mso-number-format:"\@" 는 엑셀 전용 스타일로, 해당 셀을 무조건 텍스트로 취급하게 강제한다.
   function buildXlsHtml() {
-    var textColKeys = { floor: true };
+    var textColKeys = { floor: true, brokerMobile: true };
     var textColIdx = {};
     for (var i = 0; i < COLUMNS.length; i++) if (textColKeys[COLUMNS[i].key]) textColIdx[i] = true;
 
@@ -1954,6 +2661,62 @@
       }).join("") + "</tr>";
     }).join("") + "</table>";
     return '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"></head><body>' + thtml + "</body></html>";
+  }
+
+  // 중개사 휴대폰이 안 들어올 때 원인 확인용: 목록의 중개사 블록 원본 + 상세(basicInfo)의 중개사 블록을 복사
+  async function brokerDiagnose(btn) {
+    var total = 0, withBroker = 0, withMobile = 0, sampleRec = null;
+    articles.forEach(function (r) {
+      total++;
+      if (r.brokerOffice || r.brokerRep || r.brokerMobile) withBroker++;
+      if (r.brokerMobile) withMobile++;
+      if (!sampleRec && r.realEstateType && r.tradeType) sampleRec = r;
+    });
+    var report = { url: location.href, totalArticles: total, withBrokerInfo: withBroker, withMobile: withMobile,
+      listBrokerBlocks: brokerSamples, clickedDetailResponses: brokerSeen, recentApis: recentApis, backgroundFetch: brokerFetchLog, detailProbe: null };
+
+    if (btn) btn.textContent = "상세 조회 중…";
+    if (IS_FIN && sampleRec) {
+      try {
+        var u = "https://fin.land.naver.com/front-api/v1/article/basicInfo?articleId=" + sampleRec.articleNo +
+          "&realEstateType=" + encodeURIComponent(sampleRec.realEstateType) + "&tradeType=" + encodeURIComponent(sampleRec.tradeType);
+        var res = await pageFetch(u);
+        var found = [];
+        (function walk(node, path, depth) {
+          if (!node || typeof node !== "object" || depth > 6 || found.length >= 4) return;
+          Object.keys(node).forEach(function (k) {
+            var v = node[k];
+            if (v && typeof v === "object" && /broker|realtor|agent/i.test(k)) {
+              try { var s = JSON.stringify(v); if (s.length < 3000) found.push({ path: path + "." + k, value: JSON.parse(s) }); } catch (e) {}
+            } else if (v && typeof v === "object") walk(v, path + "." + k, depth + 1);
+          });
+        })(res && res.data, "", 0);
+        report.detailProbe = { status: res && res.status, topKeys: res && res.data ? Object.keys(res.data) : null, brokerBlocks: found };
+      } catch (e) { report.detailProbe = { error: String(e) }; }
+    }
+    var text = JSON.stringify(report, null, 2);
+    console.log("[매물정리] 중개사 진단:", report);
+    if (btn) btn.textContent = "🐞 중개사진단";
+    try { navigator.clipboard.writeText(text).then(function () { flash(btn, "복사됨! 붙여넣어 주세요"); }, function () { fallbackCopy(text, btn); }); }
+    catch (e) { fallbackCopy(text, btn); }
+  }
+
+  var lastRegionInput = null; // 이번 페이지에서 마지막으로 입력한 지역명(다음 저장 때 기본값)
+  function exportContacts(btn) {
+    var n = brokerContacts().length;
+    if (!n) { flash(btn, "휴대폰 번호가 있는 중개사 없음"); return; }
+    var def = lastRegionInput != null ? lastRegionInput : defaultRegionName();
+    var region = prompt(
+      "연락처 이름 앞에 붙일 지역명을 입력하세요.\n" +
+      "수집된 " + n + "명 전체에 똑같이 적용됩니다. (예: 시흥 → \"시흥 윤도근\")\n" +
+      "카카오톡 친구로 올라온 뒤 지역명으로 검색할 수 있습니다.\n\n" +
+      "비워두면 지역명 없이 이름만 저장합니다.", def);
+    if (region === null) return; // 취소
+    lastRegionInput = region.trim();
+    var vcf = buildContactsVcf(lastRegionInput);
+    var fn = "공인중개사연락처_" + (lastRegionInput ? lastRegionInput + "_" : "") + stamp() + ".vcf";
+    download(fn, vcf, "text/vcard", true);
+    flash(btn, n + "명 저장됨");
   }
 
   function exportXLS() {
@@ -1992,7 +2755,10 @@
         buildingArea: v.buildingAreaTxt || "",
         useYear: v.useYear,
         floor: v.floor,
-        name: v.name
+        name: v.name,
+        brokerOffice: v.brokerOffice || "",
+        brokerRep: v.brokerRep || "",
+        brokerMobile: v.brokerMobile || ""
       });
     }
     if (!items.length) { flash(btn, "내보낼 매물 없음"); return; }
