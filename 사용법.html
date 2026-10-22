@@ -202,6 +202,7 @@
   tr.r-rent { background: var(--t-rent); }
   tr.r-short { background: var(--t-short); }
   .maplink { color: #c0392b; font-weight: 600; }
+  .cpn { color: #c0392b; font-weight: 600; }
   .viewlink { color: var(--green-deep); font-weight: 600; }
 
   /* ===== Column callouts ===== */
@@ -357,6 +358,7 @@
       <div class="auto"><div class="ic">🏗️</div><div><b>사용승인 년차</b><span>준공 후 경과 년차로 자동 표시</span></div></div>
       <div class="auto"><div class="ic">🧹</div><div><b>동일매물 합치기</b><span>여러 중개사가 올린 같은 물건은 한 줄로(네이버)</span></div></div>
       <div class="auto"><div class="ic">🎯</div><div><b>현재 지역·종류만</b><span>다른 지역·엉뚱한 종류가 섞이면 자동 숨김(네이버)</span></div></div>
+      <div class="auto"><div class="ic">📇</div><div><b>중개사 대표·휴대폰</b><span>네이버: 버튼 한 번으로 표 전체 매물의 중개사 정보 채우기</span></div></div>
       <div class="auto"><div class="ic">📐</div><div><b>평단가 자동 계산</b><span>전용면적 기준 만원/평, 월세는 평당월세</span></div></div>
       <div class="auto blue"><div class="ic">🏛️</div><div><b>용도지역·지목·면적 분리</b><span>디스코: 토지면적과 건물면적을 따로 표시</span></div></div>
     </div>
@@ -380,19 +382,19 @@
         <div class="mtools">
           <span class="mchk">☑ 지번 자동</span>
           <span class="msort">정렬<span class="sb on" style="background:var(--green);border-color:var(--green);color:#fff">월세</span><span class="msep"></span><span class="sb">신축순</span></span>
-          <span class="mbtn">CSV</span><span class="mbtn">엑셀</span><span class="mbtn">🗺 지도</span>
+          <span class="mbtn">CSV</span><span class="mbtn">엑셀</span><span class="mbtn">🗺 지도</span><span class="mbtn g">👥 연락처</span><span class="mbtn g">▶ 중개사 자동수집</span>
         </div>
       </div>
       <div class="tbl-scroll">
         <table class="mtbl">
           <thead><tr>
-            <th>주소</th><th>거래</th><th>보증금</th><th>월세</th><th>평단가</th><th>평당월세</th><th>면적</th><th>사용승인</th><th>층</th><th>링크</th>
+            <th>주소</th><th>거래</th><th>보증금</th><th>월세</th><th>평단가</th><th>평당월세</th><th>면적</th><th>사용승인</th><th>층</th><th>중개사무소</th><th>대표</th><th>휴대폰</th><th>링크</th>
           </tr></thead>
           <tbody>
-            <tr class="r-rent"><td>시흥시 장곡동 823-3</td><td>월세</td><td>1,000</td><td>80</td><td>—</td><td>7.6</td><td>54㎡ (10.5평)</td><td>26년차</td><td>1/5</td><td><span class="maplink">📍지도</span> <span class="viewlink">보기</span></td></tr>
-            <tr class="r-deal"><td>시흥시 장곡동 828</td><td>매매</td><td>—</td><td>—</td><td>207</td><td>—</td><td>328㎡ (77.4평)</td><td>28년차</td><td>1/2</td><td><span class="maplink">📍지도</span> <span class="viewlink">보기</span></td></tr>
-            <tr class="r-jeonse"><td>시흥시 장곡동 823-5</td><td>전세</td><td>2억</td><td>—</td><td>1,510</td><td>—</td><td>85㎡ (18.1평)</td><td>27년차</td><td>4/5</td><td><span class="maplink">📍지도</span> <span class="viewlink">보기</span></td></tr>
-            <tr class="r-short"><td>시흥시 장곡동 833</td><td>단기</td><td>1,000</td><td>90</td><td>—</td><td>6.2</td><td>52㎡ (10.0평)</td><td>4년차</td><td>2/8</td><td><span class="maplink">📍지도</span> <span class="viewlink">보기</span></td></tr>
+            <tr class="r-rent"><td>시흥시 장곡동 823-3</td><td>월세</td><td>1,000</td><td>80</td><td>—</td><td>7.6</td><td>54㎡ (10.5평)</td><td>26년차</td><td>1/5</td><td>새누리공인</td><td>윤태혁</td><td>010-9024-0552</td><td><span class="cpn">📞복사</span> <span class="maplink">📍지도</span> <span class="viewlink">보기</span></td></tr>
+            <tr class="r-deal"><td>시흥시 장곡동 828</td><td>매매</td><td>—</td><td>—</td><td>207</td><td>—</td><td>328㎡ (77.4평)</td><td>28년차</td><td>1/2</td><td>강화에이스공인</td><td>정철우</td><td>010-4497-8944</td><td><span class="cpn">📞복사</span> <span class="maplink">📍지도</span> <span class="viewlink">보기</span></td></tr>
+            <tr class="r-jeonse"><td>시흥시 장곡동 823-5</td><td>전세</td><td>2억</td><td>—</td><td>1,510</td><td>—</td><td>85㎡ (18.1평)</td><td>27년차</td><td>4/5</td><td>인삼공인</td><td>김혜경</td><td>010-8699-3150</td><td><span class="cpn">📞복사</span> <span class="maplink">📍지도</span> <span class="viewlink">보기</span></td></tr>
+            <tr class="r-short"><td>시흥시 장곡동 833</td><td>단기</td><td>1,000</td><td>90</td><td>—</td><td>6.2</td><td>52㎡ (10.0평)</td><td>4년차</td><td>2/8</td><td>강태혁공인</td><td>강태혁</td><td>010-8759-3368</td><td><span class="cpn">📞복사</span> <span class="maplink">📍지도</span> <span class="viewlink">보기</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -406,6 +408,8 @@
       <div class="col"><span class="name">면적</span><span class="desc">공급/전용 ㎡ 와 전용 평수</span></div>
       <div class="col"><span class="name">사용승인</span><span class="desc">준공 경과 <b>년차</b> (네이버 방식)</span></div>
       <div class="col"><span class="name">📍지도</span><span class="desc">카카오 지도에서 그 위치 열기</span></div>
+      <div class="col"><span class="name">중개사무소·대표·휴대폰</span><span class="desc"><b>▶ 중개사 자동수집</b>으로 채움 (아래 7c)</span></div>
+      <div class="col"><span class="name">📞복사</span><span class="desc">그 행 중개사 휴대폰 번호 복사</span></div>
       <div class="col"><span class="name">✕</span><span class="desc">그 매물(중복 포함) 표에서 삭제</span></div>
     </div>
   </section>
@@ -456,7 +460,7 @@
   <section>
     <div class="eyebrow"><span class="num">6</span> 정렬</div>
     <h2 class="title">원하는 대로 정렬 (조합 가능)</h2>
-    <p class="lead">세 묶음을 각각 켤 수 있고, <b>가장 최근에 누른 기준이 우선</b>입니다. 같은 버튼을 다시 누르면 해제돼요.</p>
+    <p class="lead">네 묶음을 각각 켤 수 있고, <b>가장 최근에 누른 기준이 우선</b>입니다. 같은 버튼을 다시 누르면 해제돼요.</p>
     <div class="setrow" style="margin-top:16px">
       <div class="set">
         <div class="lab">거래유형</div>
@@ -473,10 +477,15 @@
         <div class="btns"><span class="b">신축순</span><span class="b">구축순</span></div>
         <p>새 건물부터 / 오래된 건물부터.</p>
       </div>
+      <div class="set">
+        <div class="lab">단가</div>
+        <div class="btns"><span class="b">저단가순</span><span class="b">고단가순</span></div>
+        <p>매매·전세는 <b>평단가</b>, 월세는 <b>평당월세</b> 기준. 단위가 달라 매매·전세 묶음 → 월세 묶음 순으로 따로 정렬, 단가 없는 매물은 맨 아래.</p>
+      </div>
     </div>
     <div class="callout">
       <span class="ci">💡</span>
-      <div><b>조합 예시</b><p><b>매매 + 신축순</b> → 매매 매물이 먼저, 그 안에서 신축부터 정렬됩니다.</p></div>
+      <div><b>조합 예시</b><p><b>매매 + 신축순</b> → 매매 매물이 먼저, 그 안에서 신축부터 정렬됩니다.<br><b>월세 + 저단가순</b> → 월세 매물이 위로 모이고, 그 안에서 평당월세가 싼 순서로 정렬됩니다.</p></div>
     </div>
   </section>
 
@@ -488,6 +497,7 @@
       <div class="auto"><div class="ic">📄</div><div><b>CSV</b><span>엑셀·구글시트에서 여는 파일</span></div></div>
       <div class="auto"><div class="ic">📊</div><div><b>엑셀</b><span>서식이 있는 표 파일(.xls)</span></div></div>
       <div class="auto"><div class="ic">📋</div><div><b>복사</b><span>바로 붙여넣기용 표(엑셀·시트에 Ctrl+V)</span></div></div>
+      <div class="auto"><div class="ic">👥</div><div><b>연락처</b><span>중개사 휴대폰을 연락처 파일(.vcf)로 저장 (아래 7c)</span></div></div>
       <div class="auto"><div class="ic">🗺</div><div><b>지도</b><span>좌표 포함 JSON — 부동산 맵핑 도구에서 바로 불러오기</span></div></div>
       <div class="auto"><div class="ic">🗑️</div><div><b>초기화</b><span>표 비우기 · 처음부터 다시 모으려면 <span class="kbd">F5</span></span></div></div>
     </div>
@@ -514,6 +524,46 @@
     </div>
   </section>
 
+  <!-- 7c. 중개사 연락처 -->
+  <section>
+    <div class="eyebrow"><span class="num">7c</span> 중개사</div>
+    <h2 class="title">중개사 연락처 모으기 → 카톡 친구로</h2>
+    <p class="lead">매물을 하나씩 클릭하지 않아도 표에 있는 매물의 <b>공인중개사 대표·사무소·휴대폰</b>을 한 번에 채우고, 연락처 파일로 저장할 수 있습니다. (네이버부동산 전용)</p>
+    <div class="steps" style="margin-top:16px">
+      <div class="step">
+        <div class="n">STEP 1</div>
+        <h3>매물 모으기</h3>
+        <p>평소처럼 지역을 골라 매물 목록을 스크롤해 표에 쌓습니다.</p>
+      </div>
+      <div class="step">
+        <div class="n">STEP 2</div>
+        <h3>▶ 중개사 자동수집</h3>
+        <p>누르면 각 매물의 상세 정보를 뒤에서 받아 <b>대표·휴대폰</b>을 채웁니다. 진행 중 다시 누르면 멈춥니다.</p>
+      </div>
+      <div class="step">
+        <div class="n">STEP 3</div>
+        <h3>👥 연락처 저장</h3>
+        <p>지역명을 한 번 입력하면 수집된 <b>모든 중개사</b>에 똑같이 붙어 <span class="kbd">.vcf</span> 파일로 저장됩니다.</p>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col"><span class="name">휴대폰만</span><span class="desc"><span class="kbd">010</span> 등 휴대폰 번호만 수집. <span class="kbd">032-…</span> 같은 일반전화는 제외</span></div>
+      <div class="col"><span class="name">사무소명</span><span class="desc">끝의 “중개사사무소”를 빼고 짧게 (예: 강화에이스공인)</span></div>
+      <div class="col"><span class="name">연락처 이름</span><span class="desc"><b>지역명+사무소+대표</b>, 띄어쓰기 없이 (예: <span class="kbd">강화강화에이스공인정철우</span>)</span></div>
+      <div class="col"><span class="name">중복</span><span class="desc">같은 휴대폰 번호는 한 번만 저장 (매물을 여러 개 올린 중개사도 1명)</span></div>
+      <div class="col"><span class="name">📞복사</span><span class="desc">한두 명만 필요하면 행의 버튼으로 번호 복사 → 카톡 “연락처로 친구 추가”에 붙여넣기</span></div>
+      <div class="col"><span class="name">같은 물건</span><span class="desc">여러 중개사가 올린 같은 물건은 한 줄에 “A / B”로 함께 표시</span></div>
+    </div>
+    <div class="callout">
+      <span class="ci">📱</span>
+      <div><b>카톡 친구로 올리기</b><p>저장된 <code>.vcf</code> 파일을 휴대폰으로 옮겨 연락처에 가져오면, 카카오톡 설정의 <b>연락처 친구 자동 추가</b>가 켜져 있을 때 카톡 사용 중인 중개사가 친구 목록에 올라옵니다. 친구 검색창에 지역명(예: 강화)을 넣으면 그 지역 중개사만 모아 볼 수 있습니다.</p></div>
+    </div>
+    <div class="callout warn">
+      <span class="ci">⚠️</span>
+      <div><b>카톡 친구 자동 추가는 확장앱이 직접 할 수 없어요</b><p>카카오톡에 “번호로 친구를 바로 추가”하는 공개 기능이 없어, 연락처 파일 → 휴대폰 연락처 → 카톡 자동 추가 순서로 올립니다. 카톡을 쓰지 않거나 번호로 친구 추가를 막아둔 중개사는 올라오지 않습니다. 이미 가져온 연락처는 이름이 바뀌지 않으니, 다시 저장할 땐 예전 연락처를 지우고 가져오세요.</p></div>
+    </div>
+  </section>
+
   <!-- 8. 참고 -->
   <section>
     <div class="eyebrow"><span class="num">8</span> 참고</div>
@@ -536,6 +586,14 @@
     <div class="eyebrow"><span class="num">9</span> Q&A</div>
     <h2 class="title">자주 묻는 것들</h2>
     <div class="faq">
+      <div class="qa">
+        <div class="q"><span class="qm">Q.</span> 대표·휴대폰 칸이 비어 있어요.</div>
+        <div class="a"><b>▶ 중개사 자동수집</b>을 눌러야 채워집니다(목록에는 휴대폰이 없음). 누른 뒤에도 빈 매물은 그 중개사가 휴대폰을 올리지 않은 경우입니다. 이상하면 <b>🐞 중개사진단</b> 결과를 보내주세요.</div>
+      </div>
+      <div class="qa">
+        <div class="q"><span class="qm">Q.</span> 초기화했는데 예전 매물이 다시 쌓여요.</div>
+        <div class="a">같은 호실을 다른 중개사가 다른 매물번호로 올린 경우였는데, 이제 종류·가격·면적·층·동네가 같은 매물은 초기화 뒤 다시 담지 않습니다. 처음부터 다시 모으려면 <span class="kbd">F5</span>로 새로고침하세요.</div>
+      </div>
       <div class="qa">
         <div class="q"><span class="qm">Q.</span> 패널이 화면 다른 곳을 가려요.</div>
         <div class="a">패널 상단 제목줄을 <b>클릭한 채로 드래그</b>하면 원하는 위치로 옮길 수 있습니다. 버튼·체크박스 위에서는 드래그가 시작되지 않습니다.</div>
